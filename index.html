@@ -1,0 +1,1934 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MERITS</title>
+<style>
+  :root {
+    --bg:#ffffff; --panel:#ffffff; --card:#ffffff; --fg:#0f172a; --muted:#475569; --line:#e5e7eb;
+    --M:#16a34a; --E:#0891b2; --R:#b45309; --I:#7c3aed; --T:#db2777; --S:#dc2626; --D:#64748b;
+    --accent:#0ea5e9; --shadow:0 6px 28px rgba(2,6,23,.08);
+    --ok-green:#009E73; --ok-amber:#E69F00; --ok-red:#D32F2F;
+
+    /* Flags tuning knobs */
+    --flag-gap-x: 8px;
+    --flag-gap-y: 6px;
+    --flag-check-gap: 6px;
+  }
+  *{box-sizing:border-box; min-width:0}
+  html,body{height:100%}
+  body{
+    margin:0;background:var(--bg);color:var(--fg);
+    font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+    -webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale;
+    text-rendering:optimizeLegibility; overflow-x:hidden;
+  }
+  header{
+    display:flex;gap:12px;align-items:center;justify-content:space-between;
+    padding:12px 16px;border-bottom:1px solid var(--line);
+    background:var(--panel);position:sticky;top:0;z-index:5
+  }
+
+  .brand{
+    font-weight:900;
+    font-size:clamp(20px,3.2vw,32px);
+    line-height:1.1;
+    background:linear-gradient(90deg,#16a34a 0%, #22c55e 45%, #86efac 100%);
+    -webkit-background-clip:text;background-clip:text;color:transparent;letter-spacing:.2px;white-space:nowrap;
+  }
+
+  .actions{display:flex;gap:8px;flex-wrap:wrap;align-items:center;justify-content:flex-end}
+  .btn{all:unset;background:linear-gradient(90deg,#06b6d4,#22d3ee);color:#001018;padding:9px 12px;border-radius:10px;font-weight:700;cursor:pointer;border:1px solid #06b6d4}
+  .btn.secondary{background:#ffffff;color:#0f172a;border:1px solid var(--line)}
+  label.btn{display:inline-flex;align-items:center;gap:8px}
+  input[type="file"]{max-width:100%}
+
+  main{
+    padding:12px;
+    display:grid;
+    grid-template-columns:420px 1fr;
+    gap:10px;align-items:start
+  }
+  nav{
+    background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:10px;
+    position:sticky;top:62px;align-self:start;box-shadow:var(--shadow);max-height:calc(100vh - 80px);overflow:auto;
+    z-index:1;
+  }
+  nav h3{margin:.35rem 0;color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.06em}
+  nav button{
+    all:unset;display:flex;align-items:center;justify-content:flex-start;gap:8px;
+    width:100%;min-height:40px;padding:10px 12px;margin-bottom:8px;border-radius:12px;
+    border:1px solid var(--line);cursor:pointer;background:#fff;line-height:1.2;
+    white-space:normal;word-wrap:break-word;box-sizing:border-box;
+  }
+  nav button.active{border-color:var(--accent);background:#f0f9ff;box-shadow:inset 0 0 0 1px #bae6fd}
+
+  .card{
+    background:var(--card);border:1px solid var(--line);border-radius:18px;padding:12px;box-shadow:var(--shadow);
+    overflow:clip;
+  }
+  #panel-materials{ overflow:visible; }
+  #panel-energy{ overflow:visible; }
+  #panel-residuals{ overflow:visible; }
+  #panel-safety{ overflow:visible; }
+  #panel-integration{ overflow:visible; }
+  #panel-throughput{ overflow:visible; }
+  #panel-data{ overflow:visible; }
+
+  label{display:block;font-size:13px;color:#475569;margin-bottom:6px}
+
+  #panel-materials .grid > div > label{
+    line-height:1.2;min-height:calc(1.2em * 2);display:flex;align-items:flex-end;
+  }
+
+  /* ------- Base form field sizing (exclude checkboxes/radios) ------- */
+  input:not([type="checkbox"]):not([type="radio"]),
+  select{
+    width:100%;max-width:100%;
+    padding:9px 10px;border-radius:10px;background:#ffffff;border:1px solid var(--line);color:#0f172a;
+    min-height:38px;
+  }
+  input[type="checkbox"], input[type="radio"]{
+    width:auto; min-width:0; height:16px; min-height:0; padding:0;
+    border-radius:3px; appearance:auto; accent-color:var(--accent);
+    vertical-align:middle; cursor:pointer;
+  }
+
+  .muted{color:var(--muted)}
+  .chip{display:inline-flex;gap:6px;align-items:center;background:#f8fafc;border:1px solid var(--line);padding:6px 10px;border-radius:999px;font-size:12px;color:#0f172a}
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px;align-items:start}
+  .grid > *{min-width:0}
+  .foot{font-size:12px;color:#64748b;margin-top:6px}
+  .legend{display:flex;flex-wrap:wrap;gap:8px}
+  .hl{background:linear-gradient(90deg,transparent,#e5e7eb,transparent);height:1px;margin:8px 0}
+  .suggest{display:flex;gap:10px;flex-wrap:wrap}
+  .suggest .tip{flex:1 1 240px;border:1px dashed var(--line);background:#fbfdff;padding:10px;border-radius:12px}
+  .suggest .tip.empty{min-height:56px}
+
+  #viz{
+    width:100%;
+    max-width:780px;
+    aspect-ratio: 2 / 1;
+    display:block;margin:auto;border-radius:16px;background:#ffffff;
+  }
+
+  /* ---------- Disabled visuals ---------- */
+  input:not([type="checkbox"]):not([type="radio"]):disabled,
+  select:disabled{
+    background:#f1f5f9 !important;
+    color:#94a3b8 !important;
+    cursor:not-allowed;
+    border-color:#e2e8f0;
+  }
+  #panel-materials label.is-disabled,
+  #panel-materials label:has(+ input:disabled),
+  #panel-materials label:has(+ select:disabled){
+    color:#94a3b8;
+  }
+
+  /* Reagent grid */
+  .reagent-grid{display:grid;grid-template-columns:2fr 1fr 1fr auto;gap:6px;align-items:center}
+  .reagent-head{font-size:12px;color:#64748b;margin-top:4px}
+  .reagent-head{ position:sticky; top:0; z-index:2; background:var(--panel); padding:6px 4px; border-bottom:1px solid var(--line) }
+
+  .reagent-row{display:grid;grid-template-columns:2fr 1fr 1fr auto;gap:6px;align-items:center}
+  .reagent-row.compact{grid-template-columns:1fr 1fr; gap:6px}
+  .reagent-row.compact > :nth-child(1){grid-column:1/-1}
+  .reagent-row.compact > :nth-child(4){justify-self:end}
+
+  .rowbtn{all:unset;background:#f8fafc;border:1px solid var(--line);padding:6px 10px;border-radius:10px;cursor:pointer}
+
+  /* Instrument grid (E pillar) */
+  .instr-grid{display:grid;grid-template-columns:2fr 1fr 1fr 1fr auto;gap:6px;align-items:center}
+  .instr-row{display:grid;grid-template-columns:2fr 1fr 1fr 1fr auto;gap:6px;align-items:center}
+  .instr-row.compact{grid-template-columns:1fr 1fr; gap:6px}
+  .instr-row.compact > :nth-child(1){grid-column:1/-1}
+  .instr-row.compact > :nth-child(5){justify-self:end}
+  .instr-name-cell{display:flex;gap:6px;flex-wrap:wrap}
+  .instr-name-cell select{flex:0 1 200px;min-width:160px}
+  .instr-name-cell input[type="text"]{flex:1 1 180px;min-width:140px}
+
+  .energy-topline{
+    display:grid;
+    grid-template-columns:minmax(280px,1fr) auto;
+    gap:12px;
+    align-items:end;
+  }
+  .energy-total-row{
+    display:flex;
+    justify-content:flex-end;
+    margin:0 0 2px 0;
+  }
+  .energy-total-card{
+    display:flex;
+    flex-direction:column;
+    align-items:flex-end;
+    gap:2px;
+    max-width:520px;
+    padding:8px 10px;
+    border:1px solid var(--line);
+    border-radius:12px;
+    background:#f8fafc;
+    color:#0f172a;
+    font-size:12.5px;
+  }
+  .energy-total-label{
+    color:#64748b;
+    font-weight:700;
+  }
+  .energy-total-value{
+    font-weight:500;
+    color:#0f172a;
+    white-space:normal;
+    text-align:right;
+  }
+
+  .chip.cls-ex { background: rgba(0,158,115,.12); color:#065f46; border:1px solid rgba(0,158,115,.35) }
+  .chip.cls-ok { background: rgba(230,159,0,.12); color:#7c4800; border:1px solid rgba(230,159,0,.35) }
+  .chip.cls-bad{ background: rgba(211,47,47,.12); color:#7f1d1d; border:1px solid rgba(211,47,47,.35) }
+  .chip.pillar { background:#f8fafc; color:#0f172a; border:1px solid var(--line) }
+
+  .input-duo{display:flex;gap:6px;align-items:center}
+  #t_sample_mode{flex:1 1 55%}
+  #t_sample_value{flex:1 1 45%}
+
+  /* ------- Flags ------- */
+  #flags{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(240px,1fr));
+    gap:var(--flag-gap-y) var(--flag-gap-x);
+    align-items:start;
+  }
+  #flags .flag-item{
+    display:flex; align-items:center; gap:var(--flag-check-gap);
+    font-size:13px; line-height:1.25; white-space:normal;
+    padding:6px 8px; border:1px solid var(--line); border-radius:10px; background:#fff;
+    cursor:pointer;
+  }
+  #flags .flag-item input{ margin:0; flex:0 0 auto; }
+  #flags .flag-item span{ flex:1 1 auto; }
+
+  /* Help tooltip */
+  .field-with-help{ position:relative; }
+  .field-with-help > label{
+    display:flex !important; align-items:center; justify-content:space-between; gap:8px; min-height:auto;
+  }
+  .help-btn{
+    flex:0 0 auto; width:20px;height:20px;line-height:18px; display:inline-flex;align-items:center;justify-content:center;
+    font-weight:800;font-size:12px;border-radius:50%; background:#f8fafc;border:1px solid var(--line);color:#64748b; cursor:pointer; user-select:none;
+  }
+  .help-btn:hover{ background:#f1f5f9 }
+  .help-btn:focus{ outline:2px solid #bae6fd; outline-offset:2px }
+  .help-popover{
+    position:absolute; z-index:25; right:0; width:min(320px, 88vw);
+    background:#ffffff; color:#0f172a; border:1px solid var(--line); border-radius:12px; box-shadow:var(--shadow);
+    padding:10px 12px; font-size:13px; line-height:1.35;
+    max-height:min(72vh, 520px); overflow:auto;
+  }
+  .help-popover[data-pos="bottom"]{ top:100%; bottom:auto; margin-top:6px; }
+  .help-popover[data-pos="top"]{ bottom:100%; top:auto; margin-bottom:6px; }
+  .help-popover h4{ margin:0 0 6px 0; font-size:13px; color:#0f172a; }
+  .help-popover p{ margin:0 0 6px 0; color:#475569 }
+  .help-popover ul{ margin:0; padding-left:16px; color:#0f172a }
+
+  /* Compact grid factor field (E pillar) */
+  .grid-factor label.tight-label{display:flex;align-items:baseline;gap:6px;flex-wrap:wrap;margin-bottom:4px}
+  .grid-factor label.tight-label .unit{color:#64748b;font-weight:600;font-size:12px}
+  #e_grid{width:12ch;min-width:9ch;max-width:16ch}
+
+  /* --- Responsive breakpoints --- */
+  @media (max-width: 1280px){
+    main{ grid-template-columns:340px 1fr; }
+  }
+  @media (max-width: 1080px){
+    main{ grid-template-columns:300px 1fr; }
+    .actions .btn{ padding:8px 10px; font-size:13px }
+  }
+  @media (max-width: 1024px){
+    main{ grid-template-columns:1fr; }
+    nav{ position:static; top:auto; max-height:none; z-index:auto }
+    #viz{ max-width:100% }
+  }
+  @media (max-width: 720px){
+    .grid{ grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); }
+    .actions .btn{ padding:7px 9px; font-size:12.5px }
+    .energy-topline{ grid-template-columns:1fr; }
+    .energy-total-row{ justify-content:stretch; margin:4px 0 0 0; }
+    .energy-total-card{ width:100%; align-items:flex-start; text-align:left; }
+    .energy-total-value{ text-align:left; }
+  }
+</style>
+</head>
+<body>
+<header>
+  <div class="brand">MERITS</div>
+  <div class="actions">
+    <button class="btn" id="btnPreset1">Reset</button>
+    <button class="btn secondary" id="btnSave">Export</button>
+    <label class="btn secondary" style="cursor:pointer">Import<input id="fileLoad" hidden type="file" accept="application/json"></label>
+    <button class="btn secondary" id="btnPng">Export PNG</button>
+  </div>
+</header>
+
+<main>
+  <nav>
+    <h3>Pillars</h3>
+    <button data-panel="materials" class="active">M — Materials</button>
+    <button data-panel="energy">E — Energy & Emissions</button>
+    <button data-panel="residuals">R — Residuals (Waste)</button>
+    <button data-panel="integration">I — Integration</button>
+    <button data-panel="throughput">T — Throughput</button>
+    <button data-panel="safety">S — Safety</button>
+    <button data-panel="data">Data Confidence & Integrity</button>
+    <h3>About</h3>
+    <button data-panel="about">Method & Notes</button>
+    <div class="hl"></div>
+    <h3>Legend</h3>
+    <div class="legend" style="gap:8px 10px">
+      <span class="chip cls-ex">Excellent</span>
+      <span class="chip cls-ok">Acceptable</span>
+      <span class="chip cls-bad">Needs improvement</span>
+    </div>
+    <div class="legend" style="margin-top:6px">
+      <span class="chip pillar" id="leg_M">M</span>
+      <span class="chip pillar" id="leg_E">E</span>
+      <span class="chip pillar" id="leg_R">R</span>
+      <span class="chip pillar" id="leg_I">I</span>
+      <span class="chip pillar" id="leg_T">T</span>
+      <span class="chip pillar" id="leg_S">S</span>
+    </div>
+  </nav>
+
+  <section id="content">
+    <div class="card">
+      <div class="row" style="align-items:center">
+        <div class="col-12">
+          <canvas id="viz"></canvas>
+        </div>
+      </div>
+      <div class="foot">
+        Center shows total score; arcs show each pillar with numeric value. Outside each pillar, a thin band shows its fixed-order sub-criteria (color = sub-score). Confidence & CO₂e are shown under the score.
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:8px">
+      <h3>Focus Recommendations</h3>
+      <div class="suggest" id="recs"></div>
+    </div>
+
+    <div id="panel-materials" class="card" style="margin-top:8px">
+      <h3>M — Materials & Reagents</h3>
+      <div class="grid">
+        <div><label>Check if Multiple reagents are used</label><input id="m_multi" type="checkbox"></div>
+
+        <!-- UPDATED: Pictograms field with help button + popover -->
+        <div class="field-with-help">
+          <label>
+            <span>Number of Pictograms (GHS)</span>
+            <button id="mPictHelpBtn" type="button" class="help-btn" aria-expanded="false" aria-controls="mPictHelp" title="Help">?</button>
+          </label>
+          <div id="mPictHelp" class="help-popover" role="tooltip" data-pos="bottom" hidden>
+            <h4>How to count GHS pictograms</h4>
+            <ul>
+              <li>For <b>each reagent (solid or liquid)</b> used anywhere <b>(Up-front syntheses, sample preparation, and analysis)</b> count the <b>distinct hazard pictograms</b> shown on the manufacturer’s <b>safety data sheets (SDS)</b> or on the bottle label.</li>
+              <li>If you use <b>multiple reagents</b>, enable “Multiple reagents are used” and enter the pictogram count and per-sample amount for <b>each</b> reagent.</li>
+              <li><b>Enter amounts used per sample</b></li>
+              <li>If a reagent SDS pictogram includes the <b>signal word "Danger"</b>, it is counted as <b>one</b> additional pictogram. SDS with the signal word <b>"Warning" or no signal word are not</b> assigned an additional pictogram.</li>
+            </ul>
+            <h4>Examples</h4>
+            <ul>
+              <li>A solvent labeled with <i>Flame</i>, <i>Exclamation</i>, and <i>no signal word</i>→ enter <b>2</b>.</li>
+              <li>A solvent labeled with <i>Flame</i>, <i>Exclamation</i>, and <i>Warning</i> signal word→ enter <b>2</b>.</li>
+              <li>A solvent labeled with <i>Flame</i>, <i>Exclamation</i>, and <i>Danger</i> signal word→ enter <b>3</b>.</li>
+              <li><b>Water → 0</b> pictograms.</li>
+            </ul>
+            <h4>Note</h4>
+            <p>The <b>M pillar</b> uses a <b>hazard-weighted effective volume</b> so simply diluting a hazardous material with water does <b>not</b> artificially improve the M score. The <b>R pillar</b> uses the <b>actual raw total waste volume</b>, so there’s <b>no double penalization</b>.</p>
+          </div>
+          <!-- DEFAULT 0 -->
+          <input id="m_pictos" type="number" min="0" step="1" value="0">
+        </div>
+
+        <!-- DEFAULT 0 -->
+        <div><label>Amount per sample (mL or g)</label><input id="m_vol" type="number" min="0" step="any" value="0"></div>
+
+        <div class="field-with-help">
+          <label>
+            <span>Renewable/Green/Recommended reagents or solvents</span>
+            <button id="renHelpBtn" type="button" class="help-btn" aria-expanded="false" aria-controls="renHelp" title="Tips">?</button>
+          </label>
+          <div id="renHelp" class="help-popover" role="tooltip" data-pos="bottom" hidden>
+            <h4>How to choose</h4>
+            <p>Use CHEM21 selection guide or another comparable framework, provided that such guidelines are explicitly stated and cited. Water is the greenest solvent</p>
+            <p><b>Examples</b>:</p>
+            <ul>
+              <li><b>All</b>: Mix of renewable sources/green/recommended (e.g., Water + EtOH).</li>
+              <li><b>Some</b>: Mix of green + fossil/problematic organics (e.g., Water+ ACN, EtOH + ACN, green IL + ACN).</li>
+              <li><b>None</b>: All organics fossil/problematic (e.g., ACN, hexane).</li>
+            </ul>
+          </div>
+          <!-- DEFAULT: All/No reagents (to reach 100) -->
+          <select id="m_ren" aria-describedby="renHelp">
+            <option value="1" selected>All are renewable or green or recommended / No reagents used</option>
+            <option value="0.5">Some reagents are renewable/green/recommended</option>
+            <option value="0">None of the reagents are renewable/green/recommended</option>
+          </select>
+        </div>
+      </div>
+
+      <div id="reagentsBox" style="margin-top:10px;display:none">
+        <div class="reagent-head reagent-grid">
+          <div>Reagent</div><div>Pictograms count (GHS)</div><div>mL or g per sample</div><div></div>
+        </div>
+        <div id="reagentsList" style="display:flex;flex-direction:column;gap:6px;margin-top:4px"></div>
+        <div style="margin-top:6px;display:flex;gap:6px;flex-wrap:wrap">
+          <button id="btnAddReagent" class="rowbtn">+ Add reagent</button>
+          <small class="muted">Volumes calculated as hazard-weighted effective volume.</small>
+        </div>
+      </div>
+    </div>
+
+    <!-- E — Energy & Emissions -->
+    <div id="panel-energy" class="card" style="margin-top:8px" hidden>
+      <h3>E — Energy & Emissions</h3>
+      <div class="energy-topline">
+        <div class="grid-factor">
+          <label for="e_grid" class="tight-label">Country grid/emission factor <span class="unit">(kgCO₂e/kWh)</span></label>
+          <input id="e_grid" type="number" min="0" step="any" value="0.4">
+          <small class="muted">Used only to display CO₂e inside the center; does not affect the E score. CO₂e = Total energy × Grid factor.</small>
+        </div>
+
+
+
+        <div class="energy-total-row">
+          <div class="energy-total-card" aria-live="polite">
+            <span class="energy-total-label">Energy per sample</span>
+            <span id="eEnergyTotalValue" class="energy-total-value">Σ(P×t/n) = 0.0000 kWh/sample</span>
+          </div>
+        </div>
+       </div>
+      <div id="instrBox" style="margin-top:8px">
+
+        <div class="reagent-head instr-grid">
+          <!-- NEW: help beside Instrument -->
+          <div id="eInstrHelpWrap" class="field-with-help" style="display:flex;align-items:center;gap:6px">
+            <span>Instrument (select or type)</span>
+            <button id="eInstrHelpBtn" type="button" class="help-btn" aria-expanded="false" aria-controls="eInstrHelp" title="Help">?</button>
+            <div id="eInstrHelp" class="help-popover" role="tooltip" data-pos="bottom" hidden>
+              <p><b>Grid factor value</b> is based on <b>institution’s country</b>. List all instruments used <b>per sample including synthesis, preparation, and analysis</b></p>
+              <h4>How energy/sample is computed</h4>
+              <p><b>Energy per sample</b> = Σ (Power in kW (<i>P</i>)×Operation time in h (<i>t</i>)÷Samples processed (<i>n</i>)) across rows.</p>
+              <ul>
+                <li><b>Power (kW)</b>: Select instruments from the list provided, MERITS fills in an average power from different manufacturers. These values can be edited if the user knows their instrument’s exact consumption or choose the Custom option for instruments not in the list.</li>
+                <li><b>Operation Time (h)</b>: The time the instrument is actively running.</li>
+                <li><b>Number of samples</b>: The count of samples processed in that same time window by that instrument. <b>The only exception</b> is the up-front synthesis, where the number of samples entered should reflect how many analyses can be performed with the total amount of material synthesized. </li>
+              </ul>
+              <h4>Examples</h4>
+              <ul>
+                <li><b>Microwave digester</b>: If it draws ~2.72&nbsp;kW and digests a batch of 25 samples in 1.0&nbsp;h, enter <i>P</i>=2.72, <i>t</i>=1.0, <i>n</i>=25 → contributes (2.72×1.0/25)=0.1088&nbsp;kWh/sample.</li>
+                <li><b>Chromatography</b>: A 30-min run for one vial → <i>t</i>=0.5, <i>n</i>=1. If that vial has multiple analytes, <b>samples stay 1</b> because analyte count is handled in the T-pillar. Also for power, two rows should be added, one for the chromatograph and the other for the detector, if they are listed independently in the drop-down options.</li>
+                <li><b>Number of samples exception</b>: CNTs hydrothermally synthesized in an oven for 24 h → <i>P</i>=0.68 <i>t</i>=24, <i>n</i>=200. n = 200 represents the number of samples that can be analyzed with the total synthesized batch, based on the methodology per-analysis consumption.</li>
+              </ul>
+            </div>
+          </div>
+          <div>Power (kW)</div>
+          <div>Operation Time (hour)</div>
+          <div>Number of samples processed during this time</div>
+          <div></div>
+        </div>
+        <div id="instrList" style="display:flex;flex-direction:column;gap:6px;margin-top:4px"></div>
+        <div style="margin-top:6px;display:flex;gap:6px;align-items:center;flex-wrap:wrap">
+          <button id="btnAddInstr" class="rowbtn">+ Add instrument</button>
+          <small class="muted">Enter all the instruments used per sample analysis including sample preparation steps. kWh/sample = Σ(P⋅t / n).</small>
+        </div>
+      </div>
+    </div>
+
+    <div id="panel-residuals" class="card" style="margin-top:8px" hidden>
+      <h3>R — Residuals (Waste)</h3>
+      <div class="grid">
+        <div id="rWasteHelpWrap" class="field-with-help">
+          <label>
+            <span>Waste amount (mL or g) per sample</span>
+            <button id="rWasteHelpBtn" type="button" class="help-btn" aria-expanded="false" aria-controls="rWasteHelp" title="Help">?</button>
+          </label>
+          <div id="rWasteHelp" class="help-popover" role="tooltip" data-pos="bottom" hidden>
+            <h4>What to include</h4>
+            <p>Select the <b>total waste generated per sample</b> during:</p>
+            <ul>
+              <li><b>Sample preparation</b></li>
+              <li><b>Analytical instrumental run</b> (e.g., mobile phase or cuvette)</li>
+              <li><b>Upstream syntheses</b></li>
+            </ul>
+            <h4>Upstream syntheses</h4>
+            <p>Allocate upstream syntheses waste using the same <b>(n)</b> concept established  for upstream energy allocation in the E pillar, as follows:</p>
+            <p><b>Synthesis waste generated per sample</b> = total waste generated during batch synthesis ÷ number of samples that can be processed by the batch</p>
+            <p><b>Example</b>: A batch yields 50.0&nbsp;mL of CQDs, generates 200.0&nbsp;mL waste, and each analysis consumes 0.5&nbsp;mL of CQDs. The batch supports 50.0/0.5 = 100.0 analyses, so the allocated synthesis waste is 200.0/100.0 = <b>2.0&nbsp;mL/sample</b>. Add this 2.0&nbsp;mL to the waste generated during the sample preparation and instrumental run.</p>
+            <h4>Do not include</h4>
+            <p>The original sample amount; it is handled in the T pillar.</p>
+          </div>
+          <select id="r_waste_cat" aria-describedby="rWasteHelp">
+            <option value="le1" selected>V ≤ 1 mL (or g)</option>
+            <option value="1_10">1 < V ≤ 10 mL</option>
+            <option value="10_50">10 < V ≤ 50 mL</option>
+            <option value="50_100">50 < V ≤ 100 mL</option>
+            <option value="gt100">V &gt;100 mL</option>
+          </select>
+        </div>
+
+        <div><label>Treatment</label>
+          <select id="r_treat">
+            <option value="recycling" selected>Recycling</option>
+            <option value="degradation">Degradation</option>
+            <option value="passivation">Passivation</option>
+            <option value="none">No treatment</option>
+          </select>
+        </div>
+
+        <!-- Disposables help -->
+        <div class="field-with-help">
+          <label>
+            <span>Disposable materials</span>
+            <button id="rDispHelpBtn" type="button" class="help-btn" aria-expanded="false" aria-controls="rDispHelp" title="Help">?</button>
+          </label>
+          <div id="rDispHelp" class="help-popover" role="tooltip" data-pos="bottom" hidden>
+            <h4>Disposables vs reusable labware</h4>
+            <p><b>Reusable materials</b> are durable items that are cleaned and used again: glassware (beakers, flasks, funnels, cylinders), reusable sorbents, glass chromatography columns, etc.</p>
+            <p><b>Disposable materials</b> are single-use items: pipette tips, microcentrifuge (Eppendorf) tubes, syringes, syringe tips/needles/filters/membranes. For kits like QuEChERS count each disposable used, don't say it is a single kit so number is one</p>
+            <h4>How to choose an option</h4>
+            <ul>
+              <li><b>≤1 small disposable / Reusable materials</b>: Entirely reusable workflow or with one minor disposable per sample (e.g., a single tip and chip).</li>
+              <li><b>Some disposables (2–4)</b>: A few single-use items per sample.</li>
+              <li><b>Many disposables (&gt;4)</b>: Several disposable items per sample.</li>
+            </ul>
+          </div>
+          <select id="r_disp" aria-describedby="rDispHelp">
+            <option value="reusable" selected>≤1 small disposable used / Reusable materials</option>
+            <option value="some">Some disposables are used (2–4)</option>
+            <option value="many">Many disposables are used (&gt;4)</option>
+          </select>
+        </div>
+        <!-- END -->
+      </div>
+    </div>
+
+    <div id="panel-integration" class="card" style="margin-top:8px" hidden>
+      <h3>I — Integration</h3>
+      <div class="grid">
+
+        <!-- NEW: In-situ level help + popover -->
+        <div id="iInsituHelpWrap" class="field-with-help">
+          <label>
+            <span>In-situ level</span>
+            <button id="iInsituHelpBtn" type="button" class="help-btn" aria-expanded="false" aria-controls="iInsituHelp" title="Help">?</button>
+          </label>
+          <div id="iInsituHelp" class="help-popover" role="tooltip" data-pos="bottom" hidden>
+            <h4>How to choose the in-situ level</h4>
+            <p>Select how close the measurement is to the process or environment:</p>
+            <ul>
+              <li><b>Off-line (ex-situ)</b>: Sample is taken from the process or environment and sent to be analyzed in a separate lab/location. Examples: purchasing finished tablets for testing; withdrawing plasma or production samples, then <i>storing and/or transporting</i> them to the QC lab.</li>
+              <li><b>At-line</b>: Sample is manually withdrawn from the process but analyzed near the line (same room/next to the reactor/on the production floor). Examples: bench-top FTIR/NMR, smartphone-assisted TLC.</li>
+              <li><b>On-line</b>: Sample is automatically diverted from the process into an analyzer (often via a bypass loop/side-stream), measured, then returned to the process or discarded. Examples: a side-stream flow cell with HPLC or a spectrometer that continuously samples from the pipeline.</li>
+              <li><b>In-line</b>: Sensor is directly in the process stream, and measurement is performed without sample removal. Examples: immersed electrochemical electrodes, pH/Raman/NIR probes.</li>
+            </ul>
+            <p class="muted"><b>Note</b>: There is no separate storage/transport criterion because these are reflected by the in-situ level, automation, and their impacts can appear in sample size (T pillar) and energy (E). Hence, adding a separate criterion would double-penalize effects that often depend on external clinical/production logistics rather than the analytical method design itself.</p>
+          </div>
+          <!-- DEFAULT: In-line -->
+          <select id="i_insitu" aria-describedby="iInsituHelp">
+            <option value="ex-situ">Off-line</option>
+            <option value="on-site">At-line</option>
+            <option value="on-line">On-line</option>
+            <option value="in-line" selected>In-line</option>
+          </select>
+        </div>
+        <!-- END NEW -->
+
+        <div id="iStepsHelpWrap" class="field-with-help">
+          <label>
+            <span>Number of sample preparation steps</span>
+            <button id="iStepsHelpBtn" type="button" class="help-btn" aria-expanded="false" aria-controls="iStepsHelp" title="Help">?</button>
+          </label>
+          <div id="iStepsHelp" class="help-popover" role="tooltip" data-pos="bottom" hidden>
+            <h4>How to count “steps”</h4>
+            <p>Count only <b>distinct sample-prep unit operations</b> that actively transform/condition or separate the sample. Do <b>not</b> count “linking” actions.</p>
+            <ul>
+              <li><b>Count it</b>: sonication, vortex mixing, centrifugation, filtration, evaporation (rotavap/N₂/oven), precipitation, digestion, solid–liquid extraction, SPE <i>(treat one continuous cartridge run as a single step)</i>, lyophilization.</li>
+              <li><b>Don’t count</b>: <b>transfers</b> between vessels, routine <b>bring-to-volume</b>, serial <b>dilutions</b>, simple pipetting/aliquoting, reconstitution, labeling, weighing, passive waiting/standing.</li>
+            </ul>
+            <p class="muted">Tip: If a sequence happens on the same device without interruption or intervention (e.g., automated load→wash→elute on SPE cartridge), consider it one step.</p>
+          </div>
+          <!-- DEFAULT: 0 steps -->
+          <select id="i_steps" aria-describedby="iStepsHelp">
+            <option value="s0" selected>0 steps (direct analysis)</option>
+            <option value="s1_4">1–3 steps</option>
+            <option value="s5_6">4–5 steps</option>
+            <option value="s7_8">6–8 steps</option>
+            <option value="s9p">&gt; 8 steps</option>
+          </select>
+        </div>
+        <div>
+          <label>Do steps include derivatization?</label>
+          <select id="i_deriv">
+            <option value="none" selected>No</option>
+            <option value="one">Yes, one or two steps</option>
+            <option value="two_plus">Yes, more than 2 steps</option>
+          </select>
+        </div>
+        <div><label>Automation</label>
+          <!-- DEFAULT: Fully automated -->
+          <select id="i_auto">
+            <option value="manual">Manual</option>
+            <option value="semi">Semi-automated</option>
+            <option value="full" selected>Fully automated</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <div id="panel-throughput" class="card" style="margin-top:8px" hidden>
+      <h3>T — Throughput</h3>
+      <div class="grid">
+        <!-- UPDATED: Sample size field with help button + popover -->
+        <div id="tSampHelpWrap" class="field-with-help">
+          <label>
+            <span>Sample size (mL or g)</span>
+            <button id="tSampHelpBtn" type="button" class="help-btn" aria-expanded="false" aria-controls="tSampHelp" title="Help">?</button>
+          </label>
+          <div id="tSampHelp" class="help-popover" role="tooltip" data-pos="bottom" hidden>
+            <h4>What “Sample size” means</h4>
+            <p>Enter the amount of <b>original sample/matrix</b> you take for analysis <b>after sampling and before any preparation</b> (in g or mL).</p>
+            <ul>
+              <li><b>It is NOT</b> the injection volume into the instrument.</li>
+              <li><b>It is NOT</b> the total dilution/preparation volume.</li>
+              <li><b>It is NOT</b> the concentration (e.g., 200&nbsp;µg/mL).</li>
+            </ul>
+            <h4>Examples</h4>
+            <ul>
+              <li><b>Tablet (HPLC)</b>: 10&nbsp;mg powdered tablet → dissolve to 50&nbsp;mL → filter → inject 20&nbsp;µL. <br><b>Sample size = 0.010&nbsp;g</b> (10&nbsp;mg). <i>Not</i> the final volume (50&nbsp;mL), <i>not</i> 200&nbsp;µg/mL, and <i>not</i> 20&nbsp;µL. Even if that 200&nbsp;µg/mL is a stock for further dilution, the sample size remains 0.010&nbsp;g.</li>
+              <li><b>Serum (UV)</b>: 0.5&nbsp;mL serum → protein-precipitate → filter and dilute → fill cuvette. <br><b>Sample size = 0.5&nbsp;mL</b>.</li>
+            </ul>
+          </div>
+
+          <div class="input-duo" style="margin-top:6px">
+            <select id="t_sample_mode" title="Pick fixed ≤0.1 or enter a value >0.1">
+              <option value="fixed_0_1" selected>≤ 0.1 mL or ≤ 0.1 g (≤100 mg)</option>
+              <option value="user_gt_0_1">&gt; 0.1 mL or &gt; 0.1 g</option>
+            </select>
+            <input id="t_sample_value" type="number" min="0.1000001" step="any" value="0.2" title="Enter a value greater than 0.1" style="display:none">
+          </div>
+          <small class="muted">More than 0.1 mL or g, enter the value.</small>
+        </div>
+
+        <!-- NEW: Samples/hour help with auto-flip & close behaviors -->
+        <div id="tQHelpWrap" class="field-with-help">
+          <label>
+            <span>Samples/hour</span>
+            <button id="tQHelpBtn" type="button" class="help-btn" aria-expanded="false" aria-controls="tQHelp" title="Help">?</button>
+          </label>
+          <div id="tQHelp" class="help-popover" role="tooltip" data-pos="bottom" hidden>
+            <h4>How to calculate “Samples/hour”</h4>
+            <p>Include the <b>sample preparation</b> (e.g., extraction, precipitation, derivatization) <i>plus</i> the <b>instrument analysis time</b>.</p>
+            <h4>Example</h4>
+            <p>Preparing a tablet dosage form takes <b>10&nbsp;minutes</b> and the HPLC run is <b>5&nbsp;minutes</b>. The <b>total time per sample = 15&nbsp;minutes</b>, so <b>Samples/hour = 60/15 = 4</b>.</p>
+            <h4>One-time synthesis (not counted here)</h4>
+            <p><b>Single, up-front syntheses</b> that serve many samples (e.g., synthesizing CQDs or modified CNTs that took 24&nbsp;h to make and used for hundreds of analyses) are <b>not</b> part of the per-sample throughput time. Their penalties are reflected in the <b>M</b>, <b>E</b>, <b>R</b>, and <b>S</b> pillars.</p>
+          </div>
+          <input id="t_q" type="number" min="0" step="any" value="24">
+        </div>
+
+        <!-- DEFAULT analytes = 10 -->
+        <div><label>Number of analytes per sample</label><input id="t_analytes" type="number" min="1" step="1" value="10"></div>
+        <div>
+          <label>Multiple-samples Operation mode</label>
+          <select id="t_mode" title="Serial vs Parallel (multi-well, Lab-on-chip, etc.)">
+            <option value="parallel" selected>Parallel (multi-well, Lab-on-chip, etc.)</option>
+            <option value="serial">Sequential (Run has to be completed then next is analyzed)</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <div id="panel-safety" class="card" style="margin-top:8px" hidden>
+      <h3>S — Safety & Exposure</h3>
+      <div class="grid">
+        <div><label>Exposure control</label>
+          <select id="s_expo">
+            <option value="hermetized" selected>Hermetized / No emissions / Fully controlled</option>
+            <option value="partial_control">Partial control</option>
+            <option value="emissions">Emissions to air / Not controlled</option>
+          </select>
+        </div>
+
+        <!-- NEW: PPE help -->
+        <div class="field-with-help">
+          <label>
+            <span>PPE / Controls adequacy</span>
+            <button id="sPpeHelpBtn" type="button" class="help-btn" aria-expanded="false" aria-controls="sPpeHelp" title="Help">?</button>
+          </label>
+          <div id="sPpeHelp" class="help-popover" role="tooltip" data-pos="bottom" hidden>
+            <h4>How to choose this level</h4>
+            <ul>
+              <li><b>Minimal (baseline lab PPE)</b>: lab coat, eye glasses, single pair of disposable nitrile gloves, closed-toe shoes, ear-loop masks.</li>
+              <li><b>Moderate</b>: baseline <i>plus at least one</i> of:
+                <b>eye goggles</b>; <b>face shield</b>;
+                <b>flame-resistant</b> or <b>chemical-resistant</b> lab coat;
+                <b>heavy chemical-resistant</b>, <b>cryogenic</b>, <b>heat-resistant</b>, or <b>cut-resistant</b> gloves;
+                <b>double-nitrile gloving</b> for some steps</li>
+              <li><b>Extensive</b>: air-purifying or air-supplied <b>respirator</b>; <b>full gown/Tyvek suit</b>; <b>dedicated shoes</b>; double gloves as standard <b>in all steps</b></li>
+            </ul>
+          </div>
+          <select id="s_ppe" aria-describedby="sPpeHelp">
+            <option value="minimal" selected>Minimal</option>
+            <option value="moderate">Moderate</option>
+            <option value="extensive">Extensive</option>
+          </select>
+        </div>
+        <!-- END NEW -->
+
+        <div class="col-12">
+          <label>Critical flags</label>
+          <div id="flags"></div>
+          <small class="muted">Any critical hazard not under control will trigger red-flag rule.</small>
+        </div>
+      </div>
+    </div>
+
+    <div id="panel-data" class="card" style="margin-top:8px" hidden>
+      <h3>Data Confidence & Integrity</h3>
+      <div class="grid">
+        <div id="dCompHelpWrap" class="field-with-help">
+          <label>
+            <span>Completeness (0–1)</span>
+            <button id="dCompHelpBtn" type="button" class="help-btn" aria-expanded="false" aria-controls="dCompHelp" title="Help">?</button>
+          </label>
+          <div id="dCompHelp" class="help-popover" role="tooltip" data-pos="bottom" hidden>
+            <h4>How to evaluate completeness</h4>
+            <p><b>Completeness = 1.00</b> when all method-specific information required for MERITS is available.</p>
+            <p>When information is missing, classify the <b>primary omission</b> first:</p>
+            <ul>
+              <li><b>Single-pillar omission (−0.10)</b>: one quantitative or categorical input required for one MERITS pillar is unavailable.</li>
+              <li><b>Cross-pillar omission (−0.20)</b>: one quantitative or categorical input required for two or more MERITS pillars is unavailable.</li>
+            </ul>
+            <p>Then subtract <b>−0.10 for each additional independent missing item</b>, regardless of whether that item affects one or several pillars.</p>
+            <h4>Examples</h4>
+            <ul>
+              <li><b>Missing centrifugation duration</b>: affects Energy and Throughput → cross-pillar omission = −0.20.</li>
+              <li><b>Missing acetonitrile quantity</b>: affects Materials and Residuals → cross-pillar omission = −0.20.</li>
+              <li><b>Missing sample amount</b>: affects only Throughput → single-pillar omission = −0.10.</li>
+              <li><b>Missing renewable/recommended classification</b>: affects only Materials → single-pillar omission = −0.10.</li>
+              <li><b>Missing centrifugation duration and sample amount</b>: primary cross-pillar omission −0.20 plus one additional independent omission −0.10 → total deduction −0.30 (Completeness = 0.70).</li>
+              <li><b>Missing acetonitrile quantity, centrifugation duration, and sample amount</b>: primary cross-pillar omission −0.20 plus two additional independent omissions −0.20 → total deduction −0.40 (Completeness = 0.60).</li>
+              <li><b>Missing sample amount and material classification</b>: primary single-pillar omission −0.10 plus one additional independent omission −0.10 → total deduction −0.20 (Completeness = 0.80).</li>
+            </ul>
+          </div>
+          <input id="d_comp" type="number" min="0" max="1" step="0.01" value="1" aria-describedby="dCompHelp">
+        </div>
+        <div id="dEvidHelpWrap" class="field-with-help">
+          <label>
+            <span>Evidence quality (0–1)</span>
+            <button id="dEvidHelpBtn" type="button" class="help-btn" aria-expanded="false" aria-controls="dEvidHelp" title="Help">?</button>
+          </label>
+          <div id="dEvidHelp" class="help-popover" role="tooltip" data-pos="bottom" hidden>
+            <h4>How to evaluate evidence quality</h4>
+            <p><b>Evidence quality = 1.00</b> when all entered data are reported, traceable, taken from SDS or specification information, well documented, or supported by directly relevant published evidence.</p>
+            <p>Apply <b>−0.10 for each independent entry</b> that is based on an assumption, a non-method-specific proxy, or an unsupported categorical claim.</p>
+            <h4>Examples</h4>
+            <ul>
+              <li><b>Centrifugation capacity assumed as 16 samples</b> because the centrifuge model is not specified → one assumption = −0.10.</li>
+              <li><b>An ionic liquid is classified as green</b> without directly relevant published evidence → one unsupported categorical claim = −0.10.</li>
+              <li><b>Centrifugation capacity is assumed</b>, and <b>sample amount is estimated</b> from the linear range and reported preparation steps → two independent assumptions = −0.20.</li>
+            </ul>
+          </div>
+          <input id="d_evid" type="number" min="0" max="1" step="0.01" value="1" aria-describedby="dEvidHelp">
+        </div>
+      </div>
+      <small class="muted">Completeness: What method-specific data is missing? Evidence quality: How reliable are entered data? Final score multiplied by (0.85 + 0.15·Average).</small>
+    </div>
+
+    <div id="panel-about" class="card" style="margin-top:8px" hidden>
+      <h3>Method & Notes</h3>
+      <p>MERITS (Materials, Energy, Residuals, Integration, Throughput, Safety) is a composite index for scoring the greenness of analytical methods.</p>
+      <ul>
+        <li>Color legend: ≥75 = Excellent (Green), 50–74 = Acceptable (Yellow), <50 = Needs improvement (Glowing red).</li>
+        <li>Each pillar is a colored arc around the centre and the score is shown from 0-100.</li>
+        <li>Each arc has sub-bands whose colors reflect the contribution of each sub-criterion to that pillar.</li>
+        <li>The overall MERITS score is the geometric mean of the six pillar scores which reduces compensation by excellent pillars.</li>
+        <li>Small lower bounds are applied to the Materials pillar (5%) and Energy pillar (8%) to prevent zero-value collapse while preserving strong penalties for poor performance.</li>
+        <li>Safety pillar has a red-flag rule if any critical hazard is not controlled.</li>
+        <li>Focus recommendations highlight the two lowest-scoring pillars that fall in the yellow or glowing red range and suggest improvements based on the sub-criteria with the greatest negative impact.</li>
+        <li>A confidence factor (from data completeness and evidence quality) gently scales the final score (0.85+0.15⋅D). The value is shown under the total score as “Confidence (%)”.</li>
+        <li>The CO₂e per sample is estimated from total instrument energy × grid factor and displayed for informational purposes; it does not affect the score.</li>
+      </ul>
+        <small class="muted">For questions or bug reports: sami.goerge@pharma.asu.edu.eg</small>
+    </div>
+  </section>
+</main>
+
+<script>
+/* ---------- tiny safety helpers ---------- */
+const toNum = (v, d=0)=> {
+  const n = Number(v);
+  return Number.isFinite(n) ? n : d;
+};
+const safe = (v, d=0)=> Number.isFinite(v) ? v : d;
+
+function escAttr(v){
+  return String(v ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+}
+
+const $ = (s, r=document)=>r.querySelector(s);
+const $$ = (s, r=document)=>Array.from(r.querySelectorAll(s));
+const clamp=(v,a=0,b=1)=>Math.max(a,Math.min(b,v));
+const ln = (x)=> Math.log(Math.max(x, Number.EPSILON));
+const LOW_TH = 0.50;
+
+/* Percent helper */
+const pct = (v)=> Math.round((toNum(v,0) * 100) + 1e-9);
+
+/* Class colors (Okabe–Ito) */
+const CLASS_COLORS = {
+  excellent: getComputedStyle(document.documentElement).getPropertyValue('--ok-green').trim() || '#009E73',
+  acceptable: getComputedStyle(document.documentElement).getPropertyValue('--ok-amber').trim() || '#E69F00',
+  needs:      getComputedStyle(document.documentElement).getPropertyValue('--ok-red').trim()   || '#D32F2F'
+};
+function classFor(score){ const p=toNum(score,0); if(p>=75) return {name:'Excellent', color: CLASS_COLORS.excellent}; if(p>=50) return {name:'Acceptable', color: CLASS_COLORS.acceptable}; return {name:'Needs improvement', color: CLASS_COLORS.needs}; }
+function classNameByVal(v){ const p = pct(v); return p>=75?'excellent':p>=50?'acceptable':'needs'; }
+function subClassColor(v){ const c=classNameByVal(v); return c==='excellent'?CLASS_COLORS.excellent:c==='acceptable'?CLASS_COLORS.acceptable:CLASS_COLORS.needs; }
+function hsl(h,s,l){ return `hsl(${(h+360)%360}, ${s}%, ${l}%)`; }
+
+/* Unified hue bands */
+const HUE_BANDS={excellent:[140,148,156,164,172,180],acceptable:[34,38,42,46,50,54],needs:[354,0,6,12,18,24]};
+const SAT_BANDS={excellent:60,acceptable:90,needs:70};
+const L_DARK={excellent:36,acceptable:40,needs:40}, L_LIGHT={excellent:62,acceptable:60,needs:56};
+function paintUnifiedHues(i,v,start,span,ctx,W,H,R){
+  const vv = toNum(v,0);
+  const cname=classNameByVal(vv); const hue=HUE_BANDS[cname][i%6]; const s=SAT_BANDS[cname];
+  const dark=hsl(hue,s,L_DARK[cname]); const light=hsl(hue,s,L_LIGHT[cname]);
+  const sx=W/2+R*Math.cos(start), sy=H/2+R*Math.sin(start);
+  const ex=W/2+R*Math.cos(start+span*vv), ey=H/2+R*Math.sin(start+span*vv);
+  const grad=ctx.createLinearGradient(sx,sy,ex,ey); grad.addColorStop(0,dark); grad.addColorStop(1,light);
+  return {stroke:grad,label:dark,glow:dark};
+}
+
+/* ---------- Instrument presets (hybrid selector) ---------- */
+const INST_DB = {
+  "HPLC":0.45, "UPLC":0.61, "LC-MS":1.64, "LC-MS/MS":2.03,
+  "GC":0.92, "GC/MS":2.01, "GC-MS/MS":3.35,
+  "MALDI-TOF":1.23, "UV/Vis Spectrophotometer":0.20, "Spectrofluorometer":0.31,
+  "Potentiometer":0.07, "Potentiostat / Voltamograph":0.08, "Capillary Electrophoresis":0.34,
+  "ICP/MS":4.78, "ICP-OES":2.75, "Atomic Absorption Spectrometer":0.24, "Graphite Furnace":6.32,
+  "Mercury Analyzer":1.27, "FTIR":0.17, "Raman Spectrometer":0.14, "NMR":10.88,
+  "X-ray diffractometry":5.17, "TOC Analyzer":0.29, "Hot plate stirrer":0.55,
+  "Rotary evaporator":2.58, "Sonicator":0.24, "Auto titrator":0.05, "Microwave digester":2.72,
+  "Soxhlet extractor":1.75, "Vortex mixer":0.04, "Centrifuge":0.30, "Oven":0.68
+};
+const INST_ALIASES = {
+  "gc-ms":"GC/MS", "gc ms":"GC/MS",
+  "icp-ms":"ICP/MS", "icp ms":"ICP/MS",
+  "uv-vis":"UV/Vis Spectrophotometer", "uv/vis":"UV/Vis Spectrophotometer", "uv vis":"UV/Vis Spectrophotometer",
+  "aas":"Atomic Absorption Spectrometer",
+  "xrd":"X-ray diffractometry",
+  "rotavap":"Rotary evaporator", "rotary evaporator":"Rotary evaporator",
+  "ft-ir":"FTIR", "ftir":"FTIR",
+  "lcms":"LC-MS", "lc ms":"LC-MS",
+  "lc-ms/ms":"LC-MS/MS", "lc ms/ms":"LC-MS/MS"
+};
+function canonicalFromAlias(name){
+  if(!name) return null;
+  const s = String(name).trim();
+  if (s in INST_DB) return s;
+  const k = s.toLowerCase();
+  if (INST_ALIASES[k]) return INST_ALIASES[k];
+  const simple = k.replace(/[-/]/g,' ').replace(/\s+/g,' ').trim();
+  if(INST_ALIASES[simple]) return INST_ALIASES[simple];
+  const hit = Object.keys(INST_DB).find(c=>c.toLowerCase()===k);
+  return hit || null;
+}
+function powerForName(name){
+  const key = canonicalFromAlias(name);
+  return key && INST_DB[key] != null ? INST_DB[key] : null;
+}
+function buildInstrumentOptions(selectEl){
+  if(!selectEl) return;
+  const keys = Object.keys(INST_DB).slice().sort((a,b)=>a.localeCompare(b));
+  selectEl.innerHTML = `<option value="">Custom</option>` + keys.map(k=>`<option value="${k}">${k}</option>`).join('');
+}
+
+/* Per-reagent UI */
+let reagents=[];
+function uiMultiEnabled(){ return $('#m_multi').checked; }
+function addReagent(r={name:"", pictos:0, Vhaz:0}){ reagents.push({name:r.name||"", pictos:+(r.pictos||0), Vhaz:+(r.Vhaz||0)}); renderReagents(); }
+function removeReagent(i){ reagents.splice(i,1); renderReagents(); compute(); }
+function renderReagents(){
+  $('#reagentsBox').style.display = uiMultiEnabled() ? 'block' : 'none';
+  const host=$('#reagentsList'); host.innerHTML="";
+  reagents.forEach((r,i)=>{
+    const row=document.createElement('div'); row.className='reagent-row';
+    row.innerHTML=`
+      <input type="text" placeholder="e.g., Methanol" value="${escAttr(r.name)}">
+      <input type="number" min="0" step="1" value="${r.pictos}" placeholder="Pictos">
+      <input type="number" min="0" step="any" value="${r.Vhaz}" placeholder="mL or g">
+      <button class="rowbtn" aria-label="Remove">✕</button>`;
+    const [nm,pc,vol,btn]=row.querySelectorAll('input,button');
+    nm.oninput=e=>{ reagents[i].name=e.target.value; compute(); };
+    pc.oninput=e=>{ reagents[i].pictos=+(e.target.value||0); compute(); };
+    vol.oninput=e=>{ reagents[i].Vhaz=+(e.target.value||0); compute(); };
+    btn.onclick=()=>removeReagent(i);
+    host.appendChild(row);
+  });
+  applyCompactRows();
+}
+$('#m_multi').onchange=()=>{if($('#m_multi').checked && reagents.length===0){reagents=[{name:'',pictos:0,Vhaz:0}] ; }updateMaterialsModeUI(); renderReagents(); compute(); };
+$('#btnAddReagent')?.addEventListener('click', (e)=>{ e.preventDefault(); addReagent(); compute(); });
+
+/* Instruments UI (E pillar) */
+let instruments=[];
+function addInstrument(r={name:"", PkW:0, t:0, n:1}){ instruments.push({name:r.name||"", PkW:+(r.PkW||0), t:+(r.t||0), n:Math.max(1, +(r.n||1))}); renderInstruments(); }
+function removeInstrument(i){ instruments.splice(i,1); renderInstruments(); compute(); }
+function renderInstruments(){
+  const host=$('#instrList'); if(!host) return;
+  host.innerHTML="";
+  instruments.forEach((r,i)=>{
+    const row=document.createElement('div'); row.className='instr-row';
+
+    const nameCell=document.createElement('div'); nameCell.className='instr-name-cell';
+    const sel=document.createElement('select'); sel.className='instr-preset';
+    buildInstrumentOptions(sel);
+    const canon = canonicalFromAlias(r.name);
+    sel.value = canon && INST_DB[canon] != null ? canon : '';
+
+    const nm=document.createElement('input'); nm.type='text'; nm.placeholder='e.g., UPLC'; nm.value=r.name || (sel.value || '');
+    const pw=document.createElement('input'); pw.type='number'; pw.min='0'; pw.step='any'; pw.value= Number.isFinite(+r.PkW) ? r.PkW : ''; pw.placeholder='Power (kW)';
+    const tt=document.createElement('input'); tt.type='number'; tt.min='0'; tt.step='any'; tt.value= Number.isFinite(+r.t) ? r.t : ''; tt.placeholder='Time (h)';
+    const nn=document.createElement('input'); nn.type='number'; nn.min='1'; nn.step='1'; nn.value= Number.isFinite(+r.n) && +r.n>0 ? r.n : 1; nn.placeholder='Samples n';
+    const btn=document.createElement('button'); btn.className='rowbtn'; btn.setAttribute('aria-label','Remove'); btn.textContent='✕';
+
+    sel.onchange = (e)=>{
+      const choice = e.target.value;
+      if(choice){
+        nm.value = choice;
+        instruments[i].name = choice;
+        const pk = INST_DB[choice];
+        if(pk!=null){ pw.value = pk; instruments[i].PkW = pk; }
+        compute();
+      }else{
+        sel.value = '';
+      }
+    };
+    nm.oninput = (e)=>{
+      const val = e.target.value;
+      instruments[i].name = val;
+      const canonNow = canonicalFromAlias(val);
+      sel.value = canonNow && INST_DB[canonNow] != null ? canonNow : '';
+      const mapped = powerForName(val);
+      if(mapped!=null){
+        if(toNum(pw.value,0)===0){ pw.value = mapped; instruments[i].PkW = mapped; }
+      }
+      compute();
+    };
+
+    pw.oninput = e=>{ instruments[i].PkW = +(e.target.value||0); compute(); };
+    tt.oninput = e=>{ instruments[i].t   = +(e.target.value||0); compute(); };
+    nn.oninput = e=>{ instruments[i].n   = Math.max(1, +(e.target.value||1)); compute(); };
+    btn.onclick = ()=> removeInstrument(i);
+
+    nameCell.appendChild(sel);
+    nameCell.appendChild(nm);
+
+    row.appendChild(nameCell);
+    row.appendChild(pw);
+    row.appendChild(tt);
+    row.appendChild(nn);
+    row.appendChild(btn);
+    host.appendChild(row);
+  });
+  applyCompactRows();
+}
+$('#btnAddInstr')?.addEventListener('click', (e)=>{ e.preventDefault(); addInstrument(); compute(); });
+
+/* Flags */
+const FLAGS=[
+  ["carcinogen_uncontrolled","Carcinogen/CMR analyte or reagent"],
+  ["pressurized_no_relief","High-pressure system/vessels"],
+  ["pyrophoric_in_air","Pyrophoric reagent"],
+  ["explosive_risk","Explosive/Energetic reagent"],
+  ["acute_toxic_vapour","Toxic vapours"],
+  ["other_hazards","Other hazards (radiation, pathogens, cryogens, etc.)"]
+];
+(function(){
+  const host=$("#flags");
+  FLAGS.forEach(([id,label])=>{
+    const wrap=document.createElement('label');
+    wrap.className='flag-item';
+    wrap.htmlFor = 'flag_'+id;
+    wrap.innerHTML=`<input type="checkbox" id="flag_${id}"> <span>${label}</span>`;
+    host.appendChild(wrap);
+  });
+})();
+
+/* Live compute */
+let LIVE_COMPUTE=true;
+function enableLiveCompute(){
+  const h=e=>{ if(!LIVE_COMPUTE||e?.target?.id==='fileLoad')return; requestAnimationFrame(compute); };
+  document.addEventListener('input',h,{passive:true}); document.addEventListener('change',h,{passive:true});
+}
+
+/* Mapping helpers */
+function renDiscrete(v){ const n=toNum(v,0.5); if(n>=0.83) return 1.0; if(n<=0.17) return 0.0; return 0.5; }
+
+/* NEW: discrete si from pictograms (rounded) */
+function siFromPictos(p){
+  const n = Math.round(Math.max(0, toNum(p,0)));
+  if(n<=1) return 1.0;
+  if(n===2) return 0.8;
+  if(n===3) return 0.6;
+  if(n===4) return 0.4;
+  if(n===5) return 0.2;
+  return 0.0;
+}
+
+/* Disposables normalizer */
+function normalizeDisp(v){
+  if(v===undefined||v===null) return 'reusable';
+  if(typeof v==='number'){ if(v>=0.83) return 'reusable'; if(v<=0.17) return 'many'; return 'some'; }
+  const s=String(v).trim().toLowerCase();
+  if(['reusable','none','no','minimal','low','zero'].includes(s)) return 'reusable';
+  if(['some','mid','middle'].includes(s)) return 'some';
+  if(['many','lots','high'].includes(s)) return 'many';
+  if(/[>]\s*3|4\+|gt\s*3/.test(s)) return 'many';
+  if(/2\s*[–-]\s*3|2\+?3|<=?\s*3|≤\s*3/.test(s)) return 'some';
+  if(/<=?\s*1|≤\s*1|single|small/.test(s)) return 'reusable';
+  return ['reusable','some','many'].includes(s) ? s : 'reusable';
+}
+
+/* Waste category normalizer */
+function normalizeWasteCategory(v){
+  if(v===undefined||v===null) return '1_10';
+  if(typeof v==='number'){
+    if(v<=1) return 'le1';
+    if(v<=10) return '1_10';
+    if(v<=50) return '10_50';
+    if(v<=100) return '50_100';
+    return 'gt100';
+  }
+  const s=String(v).toLowerCase().replace(/\s+/g,'');
+  if(s.includes('≤1') || /le?1|^<=1$|^0-1$/.test(s)) return 'le1';
+  if(/^(1[-–]?10|1to10|1_10)$/.test(s)) return '1_10';
+  if(/^(10[-–]?50|10to50|10_50)$/.test(s)) return '10_50';
+  if(/^(50[-–]?100|50to100|50_100)$/.test(s)) return '50_100';
+  if(s.includes('>100') || /gt100|100\+/.test(s)) return 'gt100';
+  const num=parseFloat(s);
+  if(!isNaN(num)) return normalizeWasteCategory(num);
+  return '1_10';
+}
+function wasteScoreFromCategory(cat){
+  const m={le1:1.0, '1_10':0.75, '10_50':0.5, '50_100':0.25, gt100:0.1};
+  return m[normalizeWasteCategory(cat)];
+}
+
+/* Steps band + scorer */
+function normalizeStepsBand(v){
+  if(v===undefined||v===null) return 's1_4';
+  if(typeof v==='number'){
+    if(v<=0) return 's0';
+    if(v<=4) return 's1_4';
+    if(v<=6) return 's5_6';
+    if(v<=8) return 's7_8';
+    return 's9p';
+  }
+  const s=String(v).toLowerCase().replace(/\s+/g,'');
+  if(['s0','0','zero','direct','directanalysis','direct-analysis','directanal'].some(k=>s.includes(k))) return 's0';
+  if(['s1_4','1-4','1to4','1_4','onefour','1–4'].some(k=>s.includes(k))) return 's1_4';
+  if(['s5_6','5-6','5to6','5_6','five-six','5–6'].some(k=>s.includes(k))) return 's5_6';
+  if(['s7_8','7-8','7to8','7_8','seven-eight','7–8'].some(k=>s.includes(k))) return 's7_8';
+  if(['s9p','>8','9+','9plus','over8','gt8','morethan8'].some(k=>s.includes(k))) return 's9p';
+  const num=parseFloat(s);
+  if(!isNaN(num)) return normalizeStepsBand(num);
+  return 's1_4';
+}
+
+/* Derivatization */
+function normalizeDeriv(v){
+  if(v===undefined||v===null) return 'none';
+  if(typeof v==='number'){
+    if(v<=0) return 'none';
+    if(v===1) return 'one';
+    if(v>=2) return 'two_plus';
+  }
+  const s=String(v).toLowerCase().replace(/\s+/g,'');
+  if(['none','no','neutral','neutralization','neutralisation','neutralizationonly','neutralisationonly','0','zero','na','n/a'].includes(s)) return 'none';
+  if(['one','1','single','yesone','yes1','onestep','yesonestep'].includes(s)) return 'one';
+  if(['two_plus','2','two','>=2','≥2','twoormore','two+','2+','yes>=2','yestwo+','morethanone','yesmorethanone'].includes(s)) return 'two_plus';
+  return ['none','one','two_plus'].includes(s) ? s : 'none';
+}
+function derivFactor(code){
+  const map={none:1.0, one:0.6, two_plus:0.3};
+  return map[normalizeDeriv(code)] ?? 1.0;
+}
+
+/* Op mode */
+function normalizeOpMode(v){
+  if(v===undefined||v===null) return 'parallel';
+  const s=String(v).toLowerCase().trim();
+  if(s.startsWith('ser')) return 'serial';
+  if(s.startsWith('par') || s.includes('multi') || s.includes('well') || s.includes('chip')) return 'parallel';
+  return ['serial','parallel'].includes(s) ? s : 'parallel';
+}
+
+/* Scores */
+
+/* M — Materials (5% lower bound to prevent zero-collapse in the geometric mean) */
+const M_MIN_FLOOR = 0.05;
+function s_M_single(pictos,Vhaz,r_ren,a=0.152,b=0.80,kappa=1.0){
+  const si = siFromPictos(pictos);
+  const V  = toNum(Vhaz,0);
+  const Veff = V * (1 + kappa*(1 - si));
+  const s_haz = si;
+  const s_vol = Veff<=0 ? 1 : clamp(-a*ln(Veff)+b,0,1);
+  const s_ren = renDiscrete(r_ren);
+  const s = 0.4*s_haz + 0.4*s_vol + 0.2*s_ren;
+  return clamp(Math.max(M_MIN_FLOOR, safe(s,0)),0,1);
+}
+function s_M_multi(reagents,r_ren,a=0.152,b=0.80,kappa=1.0){
+  const clean=(reagents||[]).filter(r=>Number.isFinite(+r.pictos)&&Number.isFinite(+r.Vhaz));
+  if(clean.length===0) return s_M_single(0,0,r_ren,a,b,kappa);
+  const Vtot=clean.reduce((s,r)=>s+(+r.Vhaz||0),0);
+  const s_haz_agg = (Vtot>0)
+    ? clean.reduce((s,r)=>{ const si=siFromPictos(r.pictos); return s + (+r.Vhaz||0)*si; },0)/Vtot
+    : clean.reduce((s,r)=> s + siFromPictos(r.pictos), 0)/clean.length;
+  const V_eff=clean.reduce((s,r)=>{ const si=siFromPictos(r.pictos); return s + (+r.Vhaz||0)*(1 + kappa*(1-si)); },0);
+  const s_vol=V_eff<=0?1:clamp(-a*ln(V_eff)+b,0,1);
+  const s_ren=renDiscrete(r_ren);
+  const s = 0.4*s_haz_agg+0.4*s_vol+0.2*s_ren;
+  return clamp(Math.max(M_MIN_FLOOR, safe(s,0)),0,1);
+}
+
+/* E — Energy & Emissions (log-linear with 8.0% floor) */
+const E_MIN_FLOOR = 0.08;
+const A_E = (1 - E_MIN_FLOOR)/Math.log(15);
+const B_E = 1 + A_E * Math.log(0.1);
+function energyFromInstruments(instrs){
+  const clean=(instrs||[]).filter(r=>Number.isFinite(+r.PkW)&&Number.isFinite(+r.t)&&Number.isFinite(+r.n)&&(+r.PkW>0)&&(+r.t>0)&&(+r.n>0));
+  const Ei=clean.map(r=> (+r.PkW)*(+r.t)/(+r.n) ); // kWh/sample
+  const Etot = Ei.reduce((s,v)=>s+v,0);
+  return {Etot, Ei, clean};
+}
+function sE_from_Etot(E){
+  const e=Math.max(0, toNum(E,0));
+  if(e<=0.10) return 1.0;
+  if(e>=1.50) return E_MIN_FLOOR;
+  return clamp(-A_E*Math.log(e)+B_E,0,1);
+}
+function s_E_simple(instrs, GF){
+  const {Etot}=energyFromInstruments(instrs);
+  const s = sE_from_Etot(Etot);
+  const Celec = Etot * Math.max(0, toNum(GF,0.4)); // kg/sample
+  return [s, Celec, Etot];
+}
+
+/* Residuals */
+function s_R(W_or_cat,treat,disp){
+  const tmap={recycling:1.0,degradation:0.7,passivation:0.5,none:0.0};
+  const dmap={reusable:1.0,some:0.5,many:0.0};
+  const s_w = wasteScoreFromCategory(W_or_cat);
+  const s_t = tmap[treat]||0.0;
+  const s_d = dmap[normalizeDisp(disp)] ?? 1.0;
+  return 0.6*s_w + 0.25*s_t + 0.15*s_d;
+}
+
+/* Integration */
+function s_I(mode,stepsBandOrNum,auto,deriv){
+  const imap={"ex-situ":0.28,"on-site":0.55,"on-line":0.75,"in-line":1.0};
+  const amap={"manual":0.25,"semi":0.5,"full":1.0};
+  const s_steps_map={s0:1.0, s1_4:0.75, s5_6:0.5, s7_8:0.25, s9p:0.0};
+  const stepsCode = normalizeStepsBand(stepsBandOrNum);
+  const s_steps = s_steps_map[stepsCode] ?? 0.5;
+  const f_deriv = derivFactor(deriv);
+  return 0.4*(imap[mode]||0)+0.35*s_steps*f_deriv+0.25*(amap[auto]||0.25);
+}
+
+/* Throughput */
+function s_T(Q,Samp,A,opMode='parallel',alpha=0.6){
+  const Qn = Math.max(0, toNum(Q, 0));
+  const An = Math.max(1, toNum(A, 1));
+  Samp = Math.max(0, toNum(Samp, 0));
+  const Qeff=Qn*Math.pow(An,alpha);
+  const base = Qeff>0?clamp(0.25*ln(Qeff),0,1):0;
+  const mod  = normalizeOpMode(opMode)==='serial' ? 0.9 : 1;
+  const s_thru = base * mod;
+  const s_size = Samp<=0?1:clamp(-0.145*ln(Samp)+0.6667,0.05,1);
+  return 0.7*s_thru+0.3*s_size;
+}
+
+/* Safety */
+function s_S(expo,ppe,flags){
+  const emap={hermetized:1.0,partial_control:0.55,emissions:0.0};
+  const pmap={minimal:1.0,moderate:0.66,extensive:0.33};
+  const s0=0.6*(emap[expo]??0.55)+0.4*(pmap[ppe]??0.66);
+  const red=(Array.isArray(flags)?flags:[]).length>0&&expo==='emissions';
+  return [ red?Math.min(s0,0.25):s0, red ];
+}
+function s_D(comp,evid){ return 0.5*clamp(toNum(comp,1),0,1)+0.5*clamp(toNum(evid,1),0,1); }
+function geomMean(vals){ const clean=vals.map(v=>Math.max(0, toNum(v,0))); const prod=clean.reduce((a,b)=>a*b,1); return Math.pow(prod,1/clean.length); }
+
+/* Effective Sample */
+function effectiveSampFromUI(){
+  const mode = $('#t_sample_mode')?.value || 'fixed_0_1';
+  if(mode === 'fixed_0_1') return 0.01;
+  const raw = toNum($('#t_sample_value')?.value, 0.2);
+  return Math.max(raw, 0.1000001);
+}
+function updateSampleModeUI(){
+  const show = ($('#t_sample_mode')?.value === 'user_gt_0_1');
+  const el = $('#t_sample_value');
+  if(el){ el.style.display = show ? 'block' : 'none'; }
+}
+
+/* Flatten IO */
+const val=(x,def=null)=> (x&&typeof x==='object'&&'value'in x)?x.value:(x??def);
+function flattenInputs(d){
+  if(!d) return null;
+  const mats=d.materials||{}; const reagArr=Array.isArray(mats.reagents)?mats.reagents:[]; const mode=mats.mode||(reagArr.length>0?'multi':'single');
+
+  const e=d.energy||{};
+  let grid = toNum(val(e.grid, e.GF ?? 0.4), 0.4);
+  let instrs = Array.isArray(e.instruments) ? e.instruments.map(r=>({name:r.name||"", PkW:+r.PkW||0, t:+r.t||0, n:Math.max(1, +r.n||1)})) : [];
+
+  if(instrs.length===0 && (e.Wh!=null)){
+    const Wh = toNum(val(e.Wh,0),0);
+    instrs = [{name:"Instrument", PkW: Math.max(0, Wh/1000), t:1, n:1}];
+    grid = toNum(val(e.grid,0.4),0.4);
+  }
+
+  const th = d.throughput || {};
+  const sampNum = toNum(val(th.Samp, 0), 0);
+  const sampModeRaw = val(th.SampMode, null);
+  let sampMode = sampModeRaw;
+  if(!sampMode) sampMode = (sampNum <= 0.1 ? 'fixed_0_1' : 'user_gt_0_1');
+  const sampUser = toNum(val(th.SampUser, null), null);
+  const sampForSave = (sampMode==='fixed_0_1') ? 0.01 : (toNum(sampUser ?? sampNum, 0.2));
+
+  return {
+    materials:{mode, pictos:val(mats.pictos,1), Vhaz:val(mats.Vhaz,0), r_ren:val(mats.r_ren,0.5),
+      reagents:reagArr.map(r=>({name:r.name||"", pictos:val(r.pictos,0), Vhaz:val(r.Vhaz,0)}))},
+    energy:{ grid, instruments:instrs },
+    residuals:{
+      W: normalizeWasteCategory(val(d.residuals?.W,'1_10')),
+      treat: val(d.residuals?.treat,'recycling'),
+      disp:  normalizeDisp(val(d.residuals?.disp,'reusable'))
+    },
+    integration:{
+      mode:val(d.integration?.mode,'on-line'),
+      steps: normalizeStepsBand(val(d.integration?.steps,'s1_4')),
+      deriv: normalizeDeriv(val(d.integration?.deriv,'none')),
+      auto:val(d.integration?.auto,'semi')
+    },
+    throughput:{
+      Q:val(th.Q,0),
+      Samp:sampForSave,
+      SampMode:sampMode,
+      SampUser:(sampMode==='user_gt_0_1') ? (sampUser ?? (sampNum>0.1 ? sampNum : null)) : null,
+      A:Math.max(1,val(th.A,1)),
+      mode: normalizeOpMode(val(th.mode,'parallel'))
+    },
+    safety:{expo:val(d.safety?.expo,'hermetized'), ppe:val(d.safety?.ppe,'minimal'), flags:Array.isArray(d.safety?.flags)?d.safety.flags:[]},
+    data:{comp:val(d.data?.comp,1), evid:val(d.data?.evid,1)}
+  };
+}
+
+/* Sub-criterion breakdowns */
+function subsFor_M(x){
+  const mode=x.materials.mode; const r_ren=renDiscrete(val(x.materials.r_ren,0.5));
+  if(mode==='multi'){
+    const clean=(x.materials.reagents||[]).filter(r=>Number.isFinite(+r.pictos)&&Number.isFinite(+r.Vhaz));
+    const Vtot=clean.reduce((s,r)=>s+(+r.Vhaz||0),0);
+    const s_haz_agg=Vtot>0? clean.reduce((s,r)=>s+(+r.Vhaz||0)*siFromPictos(r.pictos),0)/Vtot : (clean.length? clean.reduce((s,r)=>s+siFromPictos(r.pictos),0)/clean.length : 1);
+    const V_eff=clean.reduce((s,r)=>{const si=siFromPictos(r.pictos); return s+(+r.Vhaz||0)*(1+1.0*(1-si));},0);
+    const s_vol=V_eff<=0?1:clamp(-0.152*ln(V_eff)+0.80,0,1);
+    return [{key:'pictos',name:'Pictos',score:s_haz_agg,w:0.4},{key:'vol',name:'Hazard-weighted volume',score:s_vol,w:0.4},{key:'ren',name:'Renewable',score:r_ren,w:0.2}];
+  }else{
+    const si = siFromPictos(toNum(val(x.materials.pictos,0),0));
+    const Vhaz=toNum(val(x.materials.Vhaz,0),0);
+    const Veff = Vhaz * (1 + 1.0*(1 - si));
+    const s_vol=Veff<=0?1:clamp(-0.152*ln(Veff)+0.80,0,1);
+    return [{key:'pictos',name:'Pictos',score:si,w:0.4},{key:'vol',name:'Hazard-weighted volume',score:s_vol,w:0.4},{key:'ren',name:'Renewable',score:r_ren,w:0.2}];
+  }
+}
+function subsFor_E(x){
+  const {Etot}=energyFromInstruments(x.energy.instruments||[]);
+  const s=sE_from_Etot(Etot);
+  return [{key:'e',name:'Energy/sample',score:s,w:1.0}];
+}
+function subsFor_R(x){
+  const Wcat=normalizeWasteCategory(val(x.residuals.W,'1_10'));
+  const treat=val(x.residuals.treat,'recycling');
+  const disp=normalizeDisp(val(x.residuals.disp,'reusable'));
+  const tmap={recycling:1.0,degradation:0.7,passivation:0.5,none:0.0};
+  const dmap={reusable:1.0,some:0.5,many:0.0};
+  const s_w=wasteScoreFromCategory(Wcat);
+  const s_t=tmap[treat]||0.0;
+  const s_d=dmap[disp]??1.0;
+  return [
+    {key:'w',  name:'Waste amt',   score:s_w, w:0.6},
+    {key:'t',  name:'Treatment',   score:s_t, w:0.25},
+    {key:'dp', name:'Disposables', score:s_d, w:0.15}
+  ];
+}
+function subsFor_I(x){
+  const imap={"ex-situ":0.28,"on-site":0.55,"on-line":0.75,"in-line":1.0};
+  const amap={"manual":0.25,"semi":0.5,"full":1.0};
+  const stepsCode = normalizeStepsBand(val(x.integration.steps,'s1_4'));
+  const s_steps = {s0:1.0, s1_4:0.75, s5_6:0.5, s7_8:0.25, s9p:0.0}[stepsCode] ?? 0.5;
+  const fDeriv  = derivFactor(val(x.integration.deriv,'none'));
+  return [
+    {key:'mode',  name:'In-situ',    score:(imap[val(x.integration.mode,'on-line')]||0), w:0.4},
+    {key:'steps', name:'Steps',      score:s_steps,                                      w:0.35},
+    {key:'deriv', name:'Deriv.',     score:fDeriv,                                       w:0.35 * s_steps},
+    {key:'auto',  name:'Automation', score:(amap[val(x.integration.auto,'semi')]||0.25), w:0.25}
+  ];
+}
+function subsFor_T(x){
+  const Q=toNum(val(x.throughput.Q,0),0),
+        Samp=Math.max(0,toNum(val(x.throughput.Samp,0),0)),
+        A=Math.max(1,toNum(val(x.throughput.A,1),1));
+  const mode = normalizeOpMode(val(x.throughput.mode,'parallel'));
+  const Qeff=Q*Math.pow(Math.max(1,A),0.6);
+  const base = Qeff>0?clamp(0.25*ln(Qeff),0,1):0;
+  const mod  = mode==='serial'?0.9:1.0;
+  const s_thru = base * mod;
+  const s_size = Samp<=0?1:clamp(-0.145*ln(Samp)+0.6667,0.05,1);
+  return [
+    {key:'size',name:'Sample size',score:s_size,w:0.3},
+    {key:'thr', name:'Throughput', score:s_thru,w:0.7}
+  ];
+}
+function subsFor_S(x){
+  const emap={hermetized:1.0,partial_control:0.55,emissions:0.0};
+  const pmap={minimal:1.0,moderate:0.66,extensive:0.33};
+  const expo=val(x.safety.expo,'hermetized'), ppe=val(x.safety.ppe,'minimal');
+  return [{key:'expo',name:'Exposure',score:(emap[expo]??0.55),w:0.6},{key:'ppe',name:'PPE',score:(pmap[ppe]??0.66),w:0.4}];
+}
+function getSubBreakdowns(x){ return {M:subsFor_M(x),E:subsFor_E(x),R:subsFor_R(x),I:subsFor_I(x),T:subsFor_T(x),S:subsFor_S(x)}; }
+
+/* Legend chips dynamic color */
+function setPillarChip(el, v){
+  if(!el) return;
+  const cname = classNameByVal(toNum(v,0));
+  const styles = {
+    excellent: {bg:'rgba(0,158,115,.12)', border:'1px solid rgba(0,158,115,.35)', color:'#065f46'},
+    acceptable:{bg:'rgba(230,159,0,.12)', border:'1px solid rgba(230,159,0,.35)', color:'#7c4800'},
+    needs:     {bg:'rgba(211,47,47,.12)', border:'1px solid rgba(211,47,47,.35)', color:'#7f1d1d'}
+  }[cname];
+  el.style.background = styles.bg;
+  el.style.border = styles.border;
+  el.style.color = styles.color;
+}
+function updateLegendPillarColors(pillars){
+  setPillarChip(document.getElementById('leg_M'), pillars.M);
+  setPillarChip(document.getElementById('leg_E'), pillars.E);
+  setPillarChip(document.getElementById('leg_R'), pillars.R);
+  setPillarChip(document.getElementById('leg_I'), pillars.I);
+  setPillarChip(document.getElementById('leg_T'), pillars.T);
+  setPillarChip(document.getElementById('leg_S'), pillars.S);
+}
+
+/* Label nudge controls (per pillar) */
+const LABEL_NUDGE_R = { M:12, E:6, R:13, I:9, T:4, S:2 };
+const LABEL_NUDGE_A = { M:6, E:1, R:-5, I:6, T:0, S:0 };
+
+/* >>> Center label nudge (prevents collision with big score) <<< */
+const CENTER_LABEL_NUDGE = 10; // px at scale=1, pushes the restored class label downward
+
+/* ---------- Focus Recommendations (no colored chips; blank when all green) ---------- */
+const PILLAR_FULL = {M:'Materials',E:'Energy & Emissions',R:'Residuals',I:'Integration',T:'Throughput',S:'Safety'};
+function recForSub(pillar, subKey){
+  const M = {
+    pictos:'Substitute to lower-hazard solvents/reagents (fewer GHS pictograms). Prefer water/EtOH; avoid ACN/hexane where feasible.',
+    vol:'Reduce hazard-weighted volume: miniaturize prep, switch to µ-extractions.',
+    ren:'Swap non-renewable/problematic solvents for renewable/“recommended” options (CHEM21 / solvent guides).'
+  };
+  const E = { e:'Cut kWh/sample: batch more samples (raise n), shorten run/operation time, or choose lower-power instruments where possible.' };
+  const R = {
+    w:'Move down a waste band: shrink make-up/conditioning volumes, recover/reuse where safe.',
+    t:'Upgrade treatment: implement recycling/neutralization or validated degradation instead of passivation/none.',
+    dp:'Replace single-use items with reusable glassware; avoid single-use sorbents/kits if alternatives exist.'
+  };
+  const I = {
+    mode:'Increase in-situ level: migrate from off-line → at-line/on-line/in-line probing where practical.',
+    steps:'Consolidate unit operations; keep continuous sequences as one step; remove non-value-adding prep.',
+    deriv:'Avoid derivatization when possible (use native detection/selectivity).',
+    auto:'Raise automation (autosampler/robotic prep/flow systems) to stabilize and shorten workflows.'
+  };
+  const T = {
+    size:'Lower original sample size to ≤0.1 mL/g where possible (micro-sampling/micro-prep).',
+    thr:'Increase effective throughput: parallelize, reduce the workflow time, or increase analytes per run.'
+  };
+  const S = {
+    expo:'Ensure full containment: closed systems, fume hood/glovebox, capture/abate vapors.',
+    ppe:'Upgrade controls/PPE (engineered controls, fit-tested respirators, double gloving where relevant).'
+  };
+  const maps = { M, E, R, I, T, S  };
+  return (maps[pillar] && maps[pillar][subKey]) || 'Improve this sub-criterion.';
+}
+function recommendations(pillars, subsByPillar, redCap=false){
+  const entries=Object.entries(pillars).filter(([k])=>['M','E','R','I','T','S'].includes(k)).sort((a,b)=>toNum(a[1],0)-toNum(b[1],0));
+  const targets=entries.slice(0,2).map(([k])=>k);
+
+  // Check if ANY acceptable/needs exists anywhere
+  let actionable=false;
+  for(const k of Object.keys(subsByPillar||{})){
+    const subs=subsByPillar[k]||[];
+    if(subs.some(s=>['acceptable','needs'].includes(classNameByVal(toNum(s.score,0))))) { actionable=true; break; }
+  }
+  if(!actionable){
+    return `<div class="tip empty"></div><div class="tip empty"></div>`;
+  }
+
+  const html = targets.map(p=>{
+    const subs=(subsByPillar && subsByPillar[p])?subsByPillar[p].slice():[];
+    const flagged=subs.filter(s=>['acceptable','needs'].includes(classNameByVal(toNum(s.score,0))));
+    if(!flagged.length){
+      return `<div class="tip empty"></div>`;
+    }
+    const list=flagged.sort((a,b)=>toNum(a.score,0)-toNum(b.score,0)).map(s=>{
+      const tip=recForSub(p,s.key);
+      return `<li><b>${s.name}</b> — ${tip}</li>`;
+    }).join('');
+    const capHint=(p==='S'&&redCap)?`<div class="muted" style="margin-top:6px">⚠️ Critical hazard red flag active.</div>`:'';
+    return `<div class="tip">
+      <b>${p} — ${PILLAR_FULL[p]}</b><br>
+      <ul style="margin:6px 0 0 18px; padding:0">${list}</ul>
+      ${capHint}
+    </div>`;
+  }).join('');
+  return html;
+}
+/* ---------- END recommendations ---------- */
+
+/* Viz + canvas sizing (responsive) */
+function setupCanvas(canvas){
+  const dpr=window.devicePixelRatio||1;
+  const cssW=Math.max(1,canvas.clientWidth||canvas.parentElement?.clientWidth||640);
+  const cssH=Math.max(1,canvas.clientHeight||Math.round(cssW/2));
+  const needW=Math.round(cssW*dpr), needH=Math.round(cssH*dpr);
+  if(canvas.width!==needW||canvas.height!==needH){ canvas.width=needW; canvas.height=needH; }
+  const ctx=canvas.getContext('2d'); ctx.setTransform(dpr,0,0,dpr,0,0); return {ctx,W:cssW,H:cssH,dpr};
+}
+function drawAnnularSegment(ctx,cx,cy,rInner,rOuter,a0,a1,fillStyle){ ctx.beginPath(); ctx.arc(cx,cy,rOuter,a0,a1); ctx.arc(cx,cy,rInner,a1,a0,true); ctx.closePath(); ctx.fillStyle=fillStyle; ctx.fill(); }
+
+/* Visualization */
+function drawViz(score,pillars,conf,co2,redCap,subBreak){
+  const canvas=document.getElementById('viz'); const {ctx,W,H}=setupCanvas(canvas);
+  ctx.clearRect(0,0,W,H); ctx.fillStyle='#ffffff'; ctx.fillRect(0,0,W,H);
+
+  const scale = clamp(W/640, 0.6, 1.15);
+  const pad=Math.round(16*scale);
+  const R=Math.max(84*scale,Math.min(W,H)*0.42-pad);
+  const ring=Math.max(12,Math.round(19*scale));
+  const gap=0.08, LABEL_OFF_BASE=Math.round(28*scale);
+
+  const SUB_THICK=Math.max(5,Math.round(6*scale)), SUB_GAP=Math.round(8*scale), LABEL_PAD=Math.round(10*scale);
+  const SUB_OUTER=R+ring/2+SUB_GAP+SUB_THICK/2;
+  const MIN_LABEL_OFF_FROM_R=(SUB_OUTER-R)+LABEL_PAD;
+
+  const keys=['M','E','R','I','T','S'], n=keys.length, full=2*Math.PI, span=(full-n*gap)/n, baseStart=-Math.PI/2;
+
+  keys.forEach((k,i)=>{
+    const val=toNum(pillars[k],0); const start=baseStart+i*(span+gap);
+
+    const isLow = classNameByVal(val) === 'needs';
+
+    if(isLow){
+      const glowCol=hsl(HUE_BANDS.needs[i%6],SAT_BANDS.needs,L_DARK.needs);
+      ctx.save(); ctx.strokeStyle=glowCol; ctx.globalAlpha=0.22; ctx.lineWidth=ring+Math.round(8*scale); ctx.lineCap='round';
+      ctx.beginPath(); ctx.arc(W/2,H/2,R,start,start+span); ctx.stroke(); ctx.restore();
+    }
+    ctx.strokeStyle='rgba(15,23,42,.12)'; ctx.lineWidth=ring; ctx.beginPath(); ctx.arc(W/2,H/2,R,start,start+span); ctx.stroke();
+
+    const paint=paintUnifiedHues(i,val,start,span,ctx,W,H,R);
+    ctx.strokeStyle=paint.stroke; ctx.lineWidth=ring; ctx.lineCap='round';
+    ctx.beginPath(); ctx.arc(W/2,H/2,R,start,start+span*val);
+    if(isLow){ ctx.save(); ctx.shadowColor=paint.glow; ctx.shadowBlur=Math.round(14*scale); ctx.globalAlpha=0.95; ctx.stroke(); ctx.restore(); } else { ctx.stroke(); }
+
+    const endAngle=start+span*val;
+    if(val>0&&val<0.06){
+      const dx=W/2+R*Math.cos(endAngle), dy=H/2+R*Math.sin(endAngle);
+      ctx.fillStyle=paint.label; ctx.beginPath(); ctx.arc(dx,dy,3,0,2*Math.PI); ctx.fill();
+    }
+
+    const baseMid=start+span/2;
+    const mid = baseMid + (toNum(LABEL_NUDGE_A[k],0) * Math.PI/180);
+    let extra=0;
+    if(k==='E'||k==='T') extra+=12*scale;
+    if(k==='S') extra+=11*scale;
+    if(val>=0.98) extra+=4*scale;
+
+    const off=Math.max(LABEL_OFF_BASE+extra, MIN_LABEL_OFF_FROM_R) + toNum(LABEL_NUDGE_R[k],0)*scale;
+    const lx=W/2+(R+off)*Math.cos(mid), ly=H/2+(R+off)*Math.sin(mid);
+    ctx.fillStyle=paint.label;
+    ctx.font=`600 ${Math.round(12.5*scale)}px Inter, system-ui, sans-serif`; ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.fillText(`${k} (${pct(val)}%)`, lx, ly);
+
+    const subs=(subBreak&&subBreak[k])?subBreak[k]:[]; 
+    if(subs.length){
+      const rCenter=R+ring/2+Math.round(8*scale), rInner=rCenter-SUB_THICK/2, rOuter=rCenter+SUB_THICK/2, cellSpan=span/subs.length;
+
+      for(let c=0;c<subs.length;c++){
+        const s=subs[c], a0=start+c*cellSpan, a1=a0+cellSpan, fill=subClassColor(toNum(s.score,0));
+        ctx.save(); ctx.globalAlpha=0.9; drawAnnularSegment(ctx,W/2,H/2,rInner,rOuter,a0,a1,fill); ctx.restore();
+        ctx.save(); ctx.strokeStyle='rgba(255,255,255,0.9)'; ctx.lineWidth=1; ctx.beginPath();
+        ctx.moveTo(W/2+rInner*Math.cos(a0),H/2+rInner*Math.sin(a0));
+        ctx.lineTo(W/2+rOuter*Math.cos(a0),H/2+rOuter*Math.sin(a0));
+        ctx.stroke(); ctx.restore();
+      }
+      ctx.save(); ctx.strokeStyle='rgba(255,255,255,0.9)'; ctx.lineWidth=1; ctx.beginPath();
+      ctx.moveTo(W/2+rInner*Math.cos(start+span),H/2+rInner*Math.sin(start+span));
+      ctx.lineTo(W/2+rOuter*Math.cos(start+span),H/2+rOuter*Math.sin(start+span)); ctx.stroke(); ctx.restore();
+
+      if(k==='S' && redCap){
+        ctx.save(); ctx.strokeStyle=CLASS_COLORS.needs; ctx.setLineDash([4,3]); ctx.lineWidth=3;
+        const rCuff=rOuter+5; ctx.beginPath(); ctx.arc(W/2,H/2,rCuff,start,start+span); ctx.stroke(); ctx.restore();
+      }
+    }
+  });
+
+  const scoreSafe = toNum(score, 0);
+  const klass=classFor(scoreSafe);
+  ctx.save(); ctx.strokeStyle=klass.color; ctx.globalAlpha=0.25; ctx.lineWidth=6; ctx.beginPath(); ctx.arc(W/2,H/2,R+6,0,2*Math.PI); ctx.stroke(); ctx.restore();
+  ctx.beginPath(); ctx.arc(W/2,H/2,R-ring-12,0,2*Math.PI); ctx.fillStyle='#ffffff'; ctx.strokeStyle='#e5e7eb'; ctx.lineWidth=1; ctx.stroke();
+
+  // Big numeric score
+  ctx.fillStyle=klass.color; ctx.textAlign='center'; ctx.textBaseline='middle';
+  ctx.font=`700 ${Math.round(46*scale)}px Inter, system-ui, sans-serif`;
+  ctx.fillText(Number.isFinite(scoreSafe)?String(scoreSafe):'-', W/2, H/2-6*scale);
+
+  /* RESTORED: textual class label */
+  ctx.fillStyle=klass.color;
+  ctx.font=`700 ${Math.round(13.5*scale)}px Inter, system-ui, sans-serif`;
+  ctx.fillText(klass.name, W/2, H/2 + (10 + CENTER_LABEL_NUDGE)*scale);
+
+  // Meta lines
+  ctx.fillStyle='#334155';
+  ctx.font=`600 ${Math.round(11.5*scale)}px Inter, system-ui, sans-serif`;
+  ctx.fillText(`Confidence: ${(toNum(conf,0)*100).toFixed(1)}%`, W/2, H/2+(28 + CENTER_LABEL_NUDGE)*scale);
+  ctx.fillText(`CO₂e: ${toNum(co2,0).toFixed(3)} kg/sample`, W/2, H/2+(44 + CENTER_LABEL_NUDGE)*scale);
+}
+
+function formatEnergyPerSample(v){
+  const n = Math.max(0, toNum(v,0));
+  if(n > 0 && n < 0.0001) return n.toExponential(3);
+  return n.toFixed(4);
+}
+function updateEnergyTotalDisplay(Etot){
+  const el = document.getElementById('eEnergyTotalValue');
+  if(!el) return;
+  el.textContent = `Σ(P×t/n) = ${formatEnergyPerSample(Etot)} kWh/sample`;
+}
+
+/* >>>>>>>>>>>>>>> FIX: added gather() and fill() <<<<<<<<<<<<<<< */
+function gather(){
+  // Materials
+  const isMulti = $('#m_multi')?.checked || false;
+  const materials = {
+    mode: isMulti ? 'multi' : 'single',
+    pictos: toNum($('#m_pictos')?.value, 0),
+    Vhaz: toNum($('#m_vol')?.value, 0),
+    r_ren: toNum($('#m_ren')?.value, 1),
+    reagents: isMulti ? (reagents || []).map(r=>({
+      name: r.name || '',
+      pictos: toNum(r.pictos, 0),
+      Vhaz: toNum(r.Vhaz, 0)
+    })) : []
+  };
+
+  // Energy
+  const energy = {
+    grid: toNum($('#e_grid')?.value, 0.4),
+    instruments: (instruments || []).map(r=>({
+      name: r.name || '',
+      PkW: toNum(r.PkW, 0),
+      t: toNum(r.t, 0),
+      n: Math.max(1, toNum(r.n, 1))
+    }))
+  };
+
+  // Residuals
+  const residuals = {
+    W: $('#r_waste_cat')?.value || 'le1',
+    treat: $('#r_treat')?.value || 'recycling',
+    disp: $('#r_disp')?.value || 'reusable'
+  };
+
+  // Integration
+  const integration = {
+    mode: $('#i_insitu')?.value || 'in-line',
+    steps: $('#i_steps')?.value || 's0',
+    deriv: $('#i_deriv')?.value || 'none',
+    auto: $('#i_auto')?.value || 'full'
+  };
+
+  // Throughput
+  const sampMode = $('#t_sample_mode')?.value || 'fixed_0_1';
+  const throughput = {
+    Q: toNum($('#t_q')?.value, 24),
+    A: Math.max(1, toNum($('#t_analytes')?.value, 10)),
+    Samp: effectiveSampFromUI(),
+    SampMode: sampMode,
+    SampUser: sampMode === 'user_gt_0_1' ? toNum($('#t_sample_value')?.value, 0.2) : null,
+    mode: $('#t_mode')?.value || 'parallel'
+  };
+
+  // Safety
+  const flags = [];
+  for(const [id] of FLAGS){
+    const el = document.getElementById('flag_'+id);
+    if(el && el.checked) flags.push(id);
+  }
+  const safety = {
+    expo: $('#s_expo')?.value || 'hermetized',
+    ppe: $('#s_ppe')?.value || 'minimal',
+    flags
+  };
+
+  // Data
+  const data = {
+    comp: toNum($('#d_comp')?.value, 1),
+    evid: toNum($('#d_evid')?.value, 1)
+  };
+
+  return { materials, energy, residuals, integration, throughput, safety, data };
+}
+
+function fill(d){
+  const x = flattenInputs(d || {}) || PRESET_LC;
+
+  // Materials
+  const isMulti = String(x.materials.mode||'single') === 'multi';
+  const multiEl = $('#m_multi');
+  if(multiEl) multiEl.checked = isMulti;
+
+  const pict = $('#m_pictos'); if(pict) pict.value = toNum(x.materials.pictos,0);
+  const vol  = $('#m_vol');    if(vol)  vol.value  = toNum(x.materials.Vhaz,0);
+  const ren  = $('#m_ren');    if(ren)  ren.value  = String(toNum(x.materials.r_ren,1));
+
+  updateMaterialsModeUI();
+
+  reagents = Array.isArray(x.materials.reagents) ? x.materials.reagents.map(r=>({
+    name: r.name || '',
+    pictos: toNum(r.pictos, 0),
+    Vhaz: toNum(r.Vhaz, 0)
+  })) : [];
+  if(isMulti && reagents.length===0){ reagents=[{name:'',pictos:0,Vhaz:0}]; }
+  renderReagents();
+
+  // Energy
+  const grid = $('#e_grid'); if(grid) grid.value = toNum(x.energy.grid,0.4);
+  instruments = Array.isArray(x.energy.instruments) ? x.energy.instruments.map(r=>({
+    name: r.name || '',
+    PkW: toNum(r.PkW, 0),
+    t: toNum(r.t, 0),
+    n: Math.max(1, toNum(r.n, 1))
+  })) : [];
+  if(instruments.length===0){ instruments=[{name:'UPLC',PkW:0.6,t:0.0,n:1}]; }
+  renderInstruments();
+
+  // Residuals
+  const w = $('#r_waste_cat'); if(w) w.value = normalizeWasteCategory(x.residuals.W);
+  const t = $('#r_treat');     if(t) t.value = x.residuals.treat || 'recycling';
+  const ddisp = $('#r_disp');  if(ddisp) ddisp.value = normalizeDisp(x.residuals.disp);
+
+  // Integration
+  const insitu = $('#i_insitu'); if(insitu) insitu.value = x.integration.mode || 'in-line';
+  const steps  = $('#i_steps');  if(steps)  steps.value  = normalizeStepsBand(x.integration.steps);
+  const deriv  = $('#i_deriv');  if(deriv)  deriv.value  = normalizeDeriv(x.integration.deriv);
+  const auto   = $('#i_auto');   if(auto)   auto.value   = x.integration.auto || 'full';
+
+  // Throughput
+  const q = $('#t_q'); if(q) q.value = toNum(x.throughput.Q, 24);
+  const a = $('#t_analytes'); if(a) a.value = Math.max(1, toNum(x.throughput.A, 10));
+  const mode = $('#t_mode'); if(mode) mode.value = normalizeOpMode(x.throughput.mode);
+
+  const sampMode = x.throughput.SampMode || ((toNum(x.throughput.Samp,0)<=0.1)?'fixed_0_1':'user_gt_0_1');
+  const sampSel = $('#t_sample_mode'); if(sampSel) sampSel.value = sampMode;
+  updateSampleModeUI();
+  const sampVal = $('#t_sample_value');
+  if(sampMode==='user_gt_0_1' && sampVal){
+    const v = toNum(x.throughput.SampUser ?? x.throughput.Samp, 0.2);
+    sampVal.value = Math.max(v, 0.1000001);
+  }
+
+  // Safety
+  for(const [id] of FLAGS){
+    const el = document.getElementById('flag_'+id);
+    if(el) el.checked = Array.isArray(x.safety.flags) ? x.safety.flags.includes(id) : false;
+  }
+  const expo = $('#s_expo'); if(expo) expo.value = x.safety.expo || 'hermetized';
+  const ppe  = $('#s_ppe');  if(ppe)  ppe.value  = x.safety.ppe  || 'minimal';
+
+  // Data
+  const comp = $('#d_comp'); if(comp) comp.value = toNum(x.data.comp,1);
+  const evid = $('#d_evid'); if(evid) evid.value = toNum(x.data.evid,1);
+
+  applyCompactRows();
+}
+/* >>>>>>>>>>>>>>> END added gather() and fill() <<<<<<<<<<<<<<< */
+
+function compute(){
+  try{
+    const x=gather();
+    const useMulti=(x.materials.mode==='multi');
+    const sM=useMulti? s_M_multi(x.materials.reagents, x.materials.r_ren.value ?? x.materials.r_ren)
+                     : s_M_single(x.materials.pictos.value ?? x.materials.pictos, x.materials.Vhaz.value ?? x.materials.Vhaz, x.materials.r_ren.value ?? x.materials.r_ren);
+
+    const grid = x.energy.grid.value ?? x.energy.grid;
+    const instr = x.energy.instruments || [];
+    const [sE,Celec,Etot] = s_E_simple(instr, grid);
+    updateEnergyTotalDisplay(Etot);
+
+    const sR=s_R(x.residuals.W.value ?? x.residuals.W, x.residuals.treat.value ?? x.residuals.treat, x.residuals.disp.value ?? x.residuals.disp);
+    const sI=s_I(x.integration.mode.value ?? x.integration.mode, x.integration.steps.value ?? x.integration.steps, x.integration.auto.value ?? x.integration.auto, x.integration.deriv.value ?? x.integration.deriv);
+    const sT=s_T(
+      x.throughput.Q.value ?? x.throughput.Q,
+      x.throughput.Samp.value ?? x.throughput.Samp,
+      (x.throughput.A && x.throughput.A.value!==undefined)?x.throughput.A.value:(x.throughput.A??10),
+      (x.throughput.mode && x.throughput.mode.value!==undefined)?x.throughput.mode.value:(x.throughput.mode??'parallel')
+    );
+    const [sS,red]=s_S(x.safety.expo.value ?? x.safety.expo, x.safety.ppe.value ?? x.safety.ppe, x.safety.flags);
+    const pillars={M:safe(sM,0),E:safe(sE,0),R:safe(sR,0),I:safe(sI,0),T:safe(sT,0),S:safe(sS,0)}; 
+    const base=geomMean([pillars.M,pillars.E,pillars.R,pillars.I,pillars.T,pillars.S]);
+    const sConf=s_D(x.data.comp.value ?? x.data.comp, x.data.evid.value ?? x.data.evid);
+    let conf=base*(0.85+0.15*sConf); let score;
+    if(red){ conf=Math.min(conf,0.40); score=Math.round(safe(conf,0) * 100); } else { score=Math.round(safe(conf,0)*100); }
+    const subs=getSubBreakdowns({ ...flattenInputs(x), energy:{ grid: grid, instruments: instr } });
+
+    updateLegendPillarColors(pillars);
+
+    drawViz(score,pillars,sConf,Celec,red,subs);
+    document.getElementById('recs').innerHTML=recommendations(pillars, subs, red);
+
+    window._last={inputs:x, pillars:{...pillars, D:sConf}, subs, score, red, Ctot:Celec, Etot};
+    return window._last;
+  }catch(err){
+    console.error('[MERITS] compute() error:', err);
+    try{ document.getElementById('recs').innerHTML = `<div class="tip"><b>Compute error</b><br>${String(err && err.message || err)}</div>`; }catch{}
+    return null;
+  }
+}
+
+/* Presets (updated defaults to open at 100) */
+const PRESET_LC={ materials:{mode:'single', pictos:0, Vhaz:0, r_ren:1, reagents:[]},
+  energy:{grid:0.4, instruments:[{name:'UPLC', PkW:0.6, t:0.0, n:1}]},
+  residuals:{W:'le1', treat:'recycling', disp:'reusable'},
+  integration:{mode:'in-line', steps:'s0', deriv:'none', auto:'full'},
+  throughput:{Q:24, Samp:0.01, A:10, mode:'parallel'},
+  safety:{expo:'hermetized', ppe:'minimal', flags:[]},
+  data:{comp:1, evid:1}
+};
+
+
+document.getElementById('btnPreset1').onclick=()=>{ fill(PRESET_LC); compute(); };
+
+/* Export JSON */
+document.getElementById('btnSave').onclick=()=>{
+  const last=window._last||compute(); const flat=flattenInputs(last?.inputs||gather());
+  const payload={ version:"3.6d-Efloor0.08-Mfloor0.05-Dmodifier0.15",
+    options:{ analyte_equiv_alpha:0.6, palette:"unified_hues_gradient", sub_band:true, floors:{ M:M_MIN_FLOOR, E:E_MIN_FLOOR }, confidence_modifier:"0.85+0.15D" },
+    inputs:flat, pillars:last?.pillars??null, subs:last?.subs??null, score:last?.score??null,
+    red_flag_cap_applied:!!last?.red, co2e_kg_per_sample:last?.Ctot??null, Etot_kWh_per_sample:last?.Etot??null };
+  const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'});
+  const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='MERITS_export.json'; a.click();
+};
+
+/* Import JSON (backward compatible; normalizes) */
+document.getElementById('fileLoad').onchange=(e)=>{
+  const f=e.target.files?.[0]; if(!f) return;
+  const reader=new FileReader();
+  reader.onload=()=>{ try{
+      const p=JSON.parse(reader.result); let inp=null;
+      if(p && p.inputs && (p.inputs.materials || p.inputs.energy || p.inputs.throughput)){
+        inp=p.inputs;
+      }else if(p && p.materials && p.energy){
+        inp=p;
+      }else if(p && p.inputs){
+        inp=p.inputs;
+      }
+      if(!inp){ alert('Loaded JSON lacks recognizable MERITS inputs.'); return; }
+      fill(inp); compute();
+    }catch(err){ console.error(err); alert('Invalid JSON file.'); }
+    finally{ e.target.value=''; }
+  };
+  reader.onerror=()=>{ alert('Could not read file.'); e.target.value=''; };
+  reader.readAsText(f);
+};
+
+/* PNG export */
+document.getElementById('btnPng').onclick=()=>{
+  const c=document.getElementById('viz'); const tmp=document.createElement('canvas'); tmp.width=c.width; tmp.height=c.height;
+  const tctx=tmp.getContext('2d'); tctx.fillStyle='#ffffff'; tctx.fillRect(0,0,tmp.width,tmp.height); tctx.drawImage(c,0,0);
+  const a=document.createElement('a'); a.href=tmp.toDataURL('image/png'); a.download='MERITS.png'; a.click();
+};
+
+/* Nav */
+$$('nav button').forEach(btn=>btn.onclick=()=>{
+  $$('nav button').forEach(b=>b.classList.remove('active')); btn.classList.add('active');
+  $$('[id^="panel-"]').forEach(p=>p.hidden=true);
+  if(btn.dataset.panel) document.getElementById('panel-'+btn.dataset.panel).hidden=false;
+  if(btn.dataset.panel==='materials'||!btn.dataset.panel) document.getElementById('panel-materials').hidden=false;
+  applyCompactRows();
+});
+
+/* Generic popover wiring with auto-flip for a (btn, pop, host) trio */
+function wirePopover({btn, pop, host}){
+  if(!btn || !pop || !host) return;
+  const place = ()=>{
+    const wasHidden = pop.hidden;
+    if(wasHidden){ pop.hidden = false; pop.style.visibility='hidden'; }
+    const h = pop.offsetHeight || 160;
+    if(wasHidden){ pop.hidden = true; pop.style.visibility=''; }
+    const rect = host.getBoundingClientRect();
+    const spaceBelow = window.innerHeight - rect.bottom;
+    pop.setAttribute('data-pos', (spaceBelow < h + 16) ? 'top' : 'bottom');
+  };
+  const open = ()=>{ place(); pop.hidden = false; btn.setAttribute('aria-expanded','true'); };
+  const close = ()=>{ pop.hidden = true; btn.setAttribute('aria-expanded','false'); };
+  const toggle = (e)=>{ e?.stopPropagation?.(); if(pop.hidden) open(); else close(); };
+
+  btn.addEventListener('click', toggle);
+  document.addEventListener('click', (e)=>{ if(pop.hidden) return; if(e.target!==btn && !pop.contains(e.target)) close(); });
+  document.addEventListener('keydown', (e)=>{ if(e.key==='Escape') close(); });
+  window.addEventListener('resize', ()=>{ if(!pop.hidden) place(); }, {passive:true});
+  window.addEventListener('scroll', ()=>{ if(!pop.hidden) place(); }, {passive:true});
+}
+
+/* Tooltip wiring */
+function setupMaterialsPictosHelp(){
+  wirePopover({ btn: $('#mPictHelpBtn'), pop: $('#mPictHelp'), host: $('#mPictHelpBtn')?.closest('.field-with-help') });
+}
+function setupRenewableHelp(){
+  wirePopover({ btn: $('#renHelpBtn'), pop: $('#renHelp'), host: $('#renHelpBtn')?.closest('.field-with-help') });
+}
+function setupEnergyInstrHelp(){
+  wirePopover({ btn: $('#eInstrHelpBtn'), pop: $('#eInstrHelp'), host: $('#eInstrHelpWrap') });
+}
+function setupResidualsWasteHelp(){
+  wirePopover({ btn: $('#rWasteHelpBtn'), pop: $('#rWasteHelp'), host: $('#rWasteHelpWrap') });
+}
+function setupResidualsDispHelp(){
+  wirePopover({ btn: $('#rDispHelpBtn'), pop: $('#rDispHelp'), host: $('#rDispHelpBtn')?.closest('.field-with-help') });
+}
+function setupSafetyPpeHelp(){
+  wirePopover({ btn: $('#sPpeHelpBtn'), pop: $('#sPpeHelp'), host: $('#sPpeHelpBtn')?.closest('.field-with-help') });
+}
+function setupIntegrationStepsHelp(){
+  wirePopover({ btn: $('#iStepsHelpBtn'), pop: $('#iStepsHelp'), host: $('#iStepsHelpWrap') });
+}
+function setupThroughputSampleHelp(){
+  wirePopover({ btn: $('#tSampHelpBtn'), pop: $('#tSampHelp'), host: $('#tSampHelpWrap') });
+}
+function setupIntegrationInsituHelp(){
+  wirePopover({ btn: $('#iInsituHelpBtn'), pop: $('#iInsituHelp'), host: $('#iInsituHelpWrap') });
+}
+/* NEW: Samples/hour help wiring */
+function setupThroughputQHelp(){
+  wirePopover({ btn: $('#tQHelpBtn'), pop: $('#tQHelp'), host: $('#tQHelpWrap') });
+}
+function setupDataCompHelp(){
+  wirePopover({ btn: $('#dCompHelpBtn'), pop: $('#dCompHelp'), host: $('#dCompHelpWrap') });
+}
+function setupDataEvidHelp(){
+  wirePopover({ btn: $('#dEvidHelpBtn'), pop: $('#dEvidHelp'), host: $('#dEvidHelpWrap') });
+}
+
+/* --- Responsive compacting for side-by-side --- */
+function applyCompactRows(){
+  const panelW = document.getElementById('content')?.clientWidth || window.innerWidth;
+  const compact = panelW < 720;
+  // Instruments
+  $$('#instrList .instr-row').forEach(row=> row.classList.toggle('compact', compact));
+  const instrHead = document.querySelector('#panel-energy .instr-grid')?.closest('.reagent-head');
+  if(instrHead){ instrHead.style.display = 'grid'; }
+  // Reagents
+  $$('#reagentsList .reagent-row').forEach(row=> row.classList.toggle('compact', compact));
+  const reagHead = document.querySelector('#panel-materials .reagent-grid')?.closest('.reagent-head');
+  if(reagHead){ reagHead.style.display = uiMultiEnabled() ? 'grid' : 'none'; }
+}
+
+/* Init */
+window.addEventListener('load', ()=>{
+  fill(PRESET_LC);           // load with perfect 100 defaults
+  updateMaterialsModeUI();
+  if(reagents.length===0) reagents=[{name:"",pictos:0,Vhaz:0}];
+  renderReagents();
+
+  if(instruments.length===0) instruments=[{name:"UPLC", PkW:0.6, t:0.0, n:1}];
+  renderInstruments();
+
+  updateSampleModeUI();
+  compute();
+  enableLiveCompute();
+  setupMaterialsPictosHelp();
+  setupRenewableHelp();
+  setupEnergyInstrHelp();
+  setupResidualsWasteHelp();
+  setupResidualsDispHelp();
+  setupSafetyPpeHelp();
+  setupIntegrationStepsHelp();
+  setupThroughputSampleHelp();
+  setupIntegrationInsituHelp();
+  setupThroughputQHelp(); // NEW
+  setupDataCompHelp();
+  setupDataEvidHelp();
+
+  document.getElementById('t_sample_mode')?.addEventListener('change', ()=>{ updateSampleModeUI(); compute(); });
+  document.getElementById('t_sample_value')?.addEventListener('input', ()=>{ if(document.getElementById('t_sample_mode')?.value==='user_gt_0_1') compute(); });
+
+  const container=document.getElementById('viz').parentElement;
+  if(window.ResizeObserver){
+    let resizeTick=false;
+    const scheduleResizeCompute=()=>{
+      if(resizeTick) return;
+      resizeTick=true;
+      requestAnimationFrame(()=>{
+        resizeTick=false;
+        applyCompactRows();
+        compute();
+      });
+    };
+    const ro=new ResizeObserver(scheduleResizeCompute);
+    ro.observe(container);
+    const content=document.getElementById('content');
+    if(content) ro.observe(content);
+  } else {
+    window.addEventListener('resize', ()=>{ applyCompactRows(); compute(); });
+  }
+});
+
+/* Materials mode UI toggle */
+function updateMaterialsModeUI(){
+  const m = uiMultiEnabled();
+  // disable inputs
+  const pict = document.getElementById('m_pictos');
+  const vol  = document.getElementById('m_vol');
+  if(pict) pict.disabled = m;
+  if(vol)  vol.disabled  = m;
+
+  // grey labels
+  if(pict && pict.previousElementSibling){ pict.previousElementSibling.classList.toggle('is-disabled', m); }
+  if(vol  && vol.previousElementSibling){  vol.previousElementSibling.classList.toggle('is-disabled', m); }
+
+  // show/hide multi box
+  const box = document.getElementById('reagentsBox');
+  if(box) box.style.display = m ? 'block' : 'none';
+
+  const reagHead = document.querySelector('#panel-materials .reagent-grid')?.closest('.reagent-head');
+  if(reagHead){ reagHead.style.display = m ? 'grid' : 'none'; }
+}
+</script>
+</body>
+</html>
