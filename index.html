@@ -477,11 +477,12 @@
           </select>
         </div>
 
-        <div><label>Treatment</label>
+        <div><label>Treatment and Management</label>
           <select id="r_treat">
             <option value="recycling" selected>Recycling</option>
             <option value="degradation">Degradation</option>
             <option value="passivation">Passivation</option>
+            <option value="disposal">Collected and stored for proper disposal</option>
             <option value="none">No treatment</option>
           </select>
         </div>
@@ -575,9 +576,29 @@
             <option value="two_plus">Yes, more than 2 steps</option>
           </select>
         </div>
-        <div><label>Automation</label>
+        <div id="iAutoHelpWrap" class="field-with-help">
+          <label>
+            <span>Automation</span>
+            <button id="iAutoHelpBtn" type="button" class="help-btn" aria-expanded="false" aria-controls="iAutoHelp" title="Help">?</button>
+          </label>
+          <div id="iAutoHelp" class="help-popover" role="tooltip" data-pos="bottom" hidden>
+            <p>Step count reflects the number of distinct sample-preparation operations required, whereas automation reflects how these operations are performed.</p>
+            <p>Assess the <b>entire routine analytical workflow</b>, including required sample preparation, sample introduction or exchange, and measurement—not just whether the instrument records measurements automatically.</p>
+            <ul>
+              <li><b>Fully automated:</b> Following initial sample placement and program initiation, all required routine sample-preparation, sample introduction/exchange, and measurement operations proceed without further operator intervention.</li>
+              <li><b>Semi-automated:</b> Some sample-preparation or sample introduction/exchange operations are automated, but others still require manual intervention.</li>
+              <li><b>Manual:</b> Required sample preparation, introduction, and exchange between successive measurements are performed manually. Automatic detection or signal recording alone does not change this classification.</li>
+              <p><b>Note:</b> Upstream material fabrication is excluded from this automation classification because it focuses on the routine use of the resulting material during sample preparation and measurement.</p>
+            </ul>
+            <h4>Examples</h4>
+            <ul>
+              <li><b>Integrated on-line capillary electrophoresis:</b> the system automatically collects and prepares samples, introduces them into the capillary, and performs successive measurements after initial setup and initiation → <b>Fully automated</b></li>
+              <li><b>LC with an autosampler:</b> samples are manually prepared, but the autosampler introduces them for successive chromatographic runs → <b>Semi-automated</b></li>
+              <li><b>Conventional cuvette-based spectrophotometry:</b> the operator empties, rinses, and refills the cuvette between measurements, even if absorbance is recorded electronically → <b>Manual</b></li>
+            </ul>
+          </div>
           <!-- DEFAULT: Fully automated -->
-          <select id="i_auto">
+          <select id="i_auto" aria-describedby="iAutoHelp">
             <option value="manual">Manual</option>
             <option value="semi">Semi-automated</option>
             <option value="full" selected>Fully automated</option>
@@ -638,7 +659,31 @@
         </div>
 
         <!-- DEFAULT analytes = 10 -->
-        <div><label>Number of analytes per sample</label><input id="t_analytes" type="number" min="1" step="1" value="10"></div>
+        <div id="tAnalytesHelpWrap" class="field-with-help">
+          <label>
+            <span>Number of analytes per sample</span>
+            <button id="tAnalytesHelpBtn" type="button" class="help-btn" aria-expanded="false" aria-controls="tAnalytesHelp" title="Help">?</button>
+          </label>
+          <div id="tAnalytesHelp" class="help-popover" role="tooltip" data-pos="bottom" hidden>
+            <p>Count the number of <b>distinct, analytically relevant components</b> that the method quantifies or qualitatively assays per sample. This recognizes the additional analytical information and separation capability of multi-component methods.</p>
+            <h4>Include</h4>
+            <ul>
+              <li><b>Target analytes</b> measured or qualitatively assayed by the method.</li>
+              <li><b>Internal standards</b> that produce separately distinguishable analytical signals from the target analytes.</li>
+              <li><b>Distinct, resolved degradation products</b> supported by evidence that they are degradation-related (e.g., reproducible stress-induced peaks), even when their identities or concentrations are not established.</li>
+            </ul>
+            <h4>Exclude</h4>
+            <p>Solvent and blank peaks; background signals or noise; unresolved or unconfirmed peaks; and interferences that are only suppressed or removed (zero-ed) without being independently determined.</p>
+            <h4>Examples</h4>
+            <ul>
+              <li><b>Two target drugs + one separately detected internal standard</b> → enter <b>3</b></li>
+              <li><b>One target drug + three distinct, reproducibly resolved degradation products</b> → enter <b>4</b></li>
+              <li><b>One target drug + a zero-ed degradation product</b> (not independently determined) → enter <b>1</b></li>
+            </ul>
+            <p>Count each eligible component <b>once</b></p>
+          </div>
+          <input id="t_analytes" type="number" min="1" step="1" value="10" aria-describedby="tAnalytesHelp">
+        </div>
         <div>
           <label>Multiple-samples Operation mode</label>
           <select id="t_mode" title="Serial vs Parallel (multi-well, Lab-on-chip, etc.)">
@@ -705,7 +750,7 @@
           <div id="dCompHelp" class="help-popover" role="tooltip" data-pos="bottom" hidden>
             <h4>How to evaluate completeness</h4>
             <p><b>Completeness = 1.00</b> when all method-specific information required for MERITS is available.</p>
-            <p>When information is missing, classify the <b>primary omission</b> first:</p>
+            <p>Inputs may be reported directly, derived from adequately reported data, or provided through clearly documented assumptions or proxies. A completeness deduction applies only when a required input is unavailable and cannot be resolved. In the latter case, classify the <b>primary omission</b> first:</p>
             <ul>
               <li><b>Single-pillar omission (−0.10)</b>: one quantitative or categorical input required for one MERITS pillar is unavailable.</li>
               <li><b>Cross-pillar omission (−0.20)</b>: one quantitative or categorical input required for two or more MERITS pillars is unavailable.</li>
@@ -713,14 +758,15 @@
             <p>Then subtract <b>−0.10 for each additional independent missing item</b>, regardless of whether that item affects one or several pillars.</p>
             <h4>Examples</h4>
             <ul>
-              <li><b>Missing centrifugation duration</b>: affects Energy and Throughput → cross-pillar omission = −0.20.</li>
-              <li><b>Missing acetonitrile quantity</b>: affects Materials and Residuals → cross-pillar omission = −0.20.</li>
-              <li><b>Missing sample amount</b>: affects only Throughput → single-pillar omission = −0.10.</li>
-              <li><b>Missing renewable/recommended classification</b>: affects only Materials → single-pillar omission = −0.10.</li>
-              <li><b>Missing centrifugation duration and sample amount</b>: primary cross-pillar omission −0.20 plus one additional independent omission −0.10 → total deduction −0.30 (Completeness = 0.70).</li>
-              <li><b>Missing acetonitrile quantity, centrifugation duration, and sample amount</b>: primary cross-pillar omission −0.20 plus two additional independent omissions −0.20 → total deduction −0.40 (Completeness = 0.60).</li>
-              <li><b>Missing sample amount and material classification</b>: primary single-pillar omission −0.10 plus one additional independent omission −0.10 → total deduction −0.20 (Completeness = 0.80).</li>
+              <li><b>Unresolved centrifugation duration</b>: affects Energy and Throughput → cross-pillar omission = −0.20.</li>
+              <li><b>Unresolved acetonitrile quantity</b>: affects Materials and Residuals → cross-pillar omission = −0.20.</li>
+              <li><b>Unresolved sample amount</b>: affects only Throughput → single-pillar omission = −0.10.</li>
+              <li><b>Unresolved renewable/recommended classification</b>: affects only Materials → single-pillar omission = −0.10.</li>
+              <li><b>Unresolved centrifugation duration and sample amount</b>: primary cross-pillar omission −0.20 plus one additional independent omission −0.10 → total deduction −0.30 (Completeness = 0.70).</li>
+              <li><b>Unresolved acetonitrile quantity, centrifugation duration, and sample amount</b>: primary cross-pillar omission −0.20 plus two additional independent omissions −0.20 → total deduction −0.40 (Completeness = 0.60).</li>
+              <li><b>Unresolved sample amount and material classification</b>: primary single-pillar omission −0.10 plus one additional independent omission −0.10 → total deduction −0.20 (Completeness = 0.80).</li>
             </ul>
+            <p><b>Note:</b> Acids and bases used solely for <b>routine pH adjustment</b> are not subject to completeness deductions.</p>
           </div>
           <input id="d_comp" type="number" min="0" max="1" step="0.01" value="1" aria-describedby="dCompHelp">
         </div>
@@ -731,13 +777,14 @@
           </label>
           <div id="dEvidHelp" class="help-popover" role="tooltip" data-pos="bottom" hidden>
             <h4>How to evaluate evidence quality</h4>
+            <p>Evidence quality evaluates how well the evidence supports MERITS' inputs and the evidential limitations of any assumed inputs.</p>
             <p><b>Evidence quality = 1.00</b> when all entered data are reported, traceable, taken from SDS or specification information, well documented, or supported by directly relevant published evidence.</p>
             <p>Apply <b>−0.10 for each independent entry</b> that is based on an assumption, a non-method-specific proxy, or an unsupported categorical claim.</p>
             <h4>Examples</h4>
             <ul>
               <li><b>Centrifugation capacity assumed as 16 samples</b> because the centrifuge model is not specified → one assumption = −0.10.</li>
               <li><b>An ionic liquid is classified as green</b> without directly relevant published evidence → one unsupported categorical claim = −0.10.</li>
-              <li><b>Centrifugation capacity is assumed</b>, and <b>sample amount is estimated</b> from the linear range and reported preparation steps → two independent assumptions = −0.20.</li>
+              <li><b>Both centrifugation capacity and sample amount are assumed</b>, and the reported instrumentation, linear range, and preparation details were insufficient to determine them uniquely → two independent assumptions = −0.20.</li>
             </ul>
           </div>
           <input id="d_evid" type="number" min="0" max="1" step="0.01" value="1" aria-describedby="dEvidHelp">
@@ -1134,7 +1181,7 @@ function s_E_simple(instrs, GF){
 
 /* Residuals */
 function s_R(W_or_cat,treat,disp){
-  const tmap={recycling:1.0,degradation:0.7,passivation:0.5,none:0.0};
+  const tmap={recycling:1.0,degradation:0.7,passivation:0.5,disposal:0.2,none:0.0};
   const dmap={reusable:1.0,some:0.5,many:0.0};
   const s_w = wasteScoreFromCategory(W_or_cat);
   const s_t = tmap[treat]||0.0;
@@ -1269,7 +1316,7 @@ function subsFor_R(x){
   const Wcat=normalizeWasteCategory(val(x.residuals.W,'1_10'));
   const treat=val(x.residuals.treat,'recycling');
   const disp=normalizeDisp(val(x.residuals.disp,'reusable'));
-  const tmap={recycling:1.0,degradation:0.7,passivation:0.5,none:0.0};
+  const tmap={recycling:1.0,degradation:0.7,passivation:0.5,disposal:0.2,none:0.0};
   const dmap={reusable:1.0,some:0.5,many:0.0};
   const s_w=wasteScoreFromCategory(Wcat);
   const s_t=tmap[treat]||0.0;
@@ -1356,7 +1403,7 @@ function recForSub(pillar, subKey){
   const E = { e:'Cut kWh/sample: batch more samples (raise n), shorten run/operation time, or choose lower-power instruments where possible.' };
   const R = {
     w:'Move down a waste band: shrink make-up/conditioning volumes, recover/reuse where safe.',
-    t:'Upgrade treatment: implement recycling/neutralization or validated degradation instead of passivation/none.',
+    t:'Upgrade treatment: implement recycling/neutralization or proper degradation.',
     dp:'Replace single-use items with reusable glassware; avoid single-use sorbents/kits if alternatives exist.'
   };
   const I = {
@@ -1736,9 +1783,9 @@ document.getElementById('btnPreset1').onclick=()=>{ fill(PRESET_LC); compute(); 
 
 /* Export JSON */
 document.getElementById('btnSave').onclick=()=>{
-  const last=window._last||compute(); const flat=flattenInputs(last?.inputs||gather());
-  const payload={ version:"3.6d-Efloor0.08-Mfloor0.05-Dmodifier0.15",
-    options:{ analyte_equiv_alpha:0.6, palette:"unified_hues_gradient", sub_band:true, floors:{ M:M_MIN_FLOOR, E:E_MIN_FLOOR }, confidence_modifier:"0.85+0.15D" },
+  const last=compute(); const flat=flattenInputs(last?.inputs||gather());
+  const payload={ version:"3.6e-Efloor0.08-Mfloor0.05-Dmodifier0.15-Rdisposal0.20",
+    options:{ analyte_equiv_alpha:0.6, palette:"unified_hues_gradient", sub_band:true, floors:{ M:M_MIN_FLOOR, E:E_MIN_FLOOR }, confidence_modifier:"0.85+0.15D", residuals_treatment_scores:{ recycling:1.0, degradation:0.7, passivation:0.5, disposal:0.2, none:0.0 } },
     inputs:flat, pillars:last?.pillars??null, subs:last?.subs??null, score:last?.score??null,
     red_flag_cap_applied:!!last?.red, co2e_kg_per_sample:last?.Ctot??null, Etot_kWh_per_sample:last?.Etot??null };
   const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'});
@@ -1790,8 +1837,13 @@ function wirePopover({btn, pop, host}){
     const wasHidden = pop.hidden;
     if(wasHidden){ pop.hidden = false; pop.style.visibility='hidden'; }
     const h = pop.offsetHeight || 160;
+    const popWidth = pop.offsetWidth || 320;
     if(wasHidden){ pop.hidden = true; pop.style.visibility=''; }
     const rect = host.getBoundingClientRect();
+    // Preserve right alignment except when it would move the popover off-screen.
+    const pad = 8;
+    const desiredRight = Math.max(popWidth + pad, Math.min(window.innerWidth - pad, rect.right));
+    pop.style.right = `${rect.right - desiredRight}px`;
     const spaceBelow = window.innerHeight - rect.bottom;
     pop.setAttribute('data-pos', (spaceBelow < h + 16) ? 'top' : 'bottom');
   };
@@ -1834,9 +1886,15 @@ function setupThroughputSampleHelp(){
 function setupIntegrationInsituHelp(){
   wirePopover({ btn: $('#iInsituHelpBtn'), pop: $('#iInsituHelp'), host: $('#iInsituHelpWrap') });
 }
+function setupIntegrationAutoHelp(){
+  wirePopover({ btn: $('#iAutoHelpBtn'), pop: $('#iAutoHelp'), host: $('#iAutoHelpWrap') });
+}
 /* NEW: Samples/hour help wiring */
 function setupThroughputQHelp(){
   wirePopover({ btn: $('#tQHelpBtn'), pop: $('#tQHelp'), host: $('#tQHelpWrap') });
+}
+function setupThroughputAnalytesHelp(){
+  wirePopover({ btn: $('#tAnalytesHelpBtn'), pop: $('#tAnalytesHelp'), host: $('#tAnalytesHelpWrap') });
 }
 function setupDataCompHelp(){
   wirePopover({ btn: $('#dCompHelpBtn'), pop: $('#dCompHelp'), host: $('#dCompHelpWrap') });
@@ -1881,7 +1939,9 @@ window.addEventListener('load', ()=>{
   setupIntegrationStepsHelp();
   setupThroughputSampleHelp();
   setupIntegrationInsituHelp();
+  setupIntegrationAutoHelp();
   setupThroughputQHelp(); // NEW
+  setupThroughputAnalytesHelp();
   setupDataCompHelp();
   setupDataEvidHelp();
 
